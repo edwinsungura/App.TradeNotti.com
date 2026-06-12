@@ -1,0 +1,167 @@
+// TradeNotti — Prisma schema
+// Postgres-backed. Models cover the Today page: accounts, trades (open/closed),
+// trading rules (read here, managed later in the Rules feature) and cached AI insights.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  accounts  Account[]
+}
+
+enum AccountType {
+  LIVE
+  DEMO
+}
+
+model Account {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Display
+  label     String // e.g. "FTMO 100k"
+  broker    String      @default("MetaTrader 5")
+  currency  String      @default("USD")
+  type      AccountType @default(LIVE)
+  balance   Decimal     @default(0) @db.Decimal(18, 2)
+
+  // Broker connection (MetaApi.cloud). Null until a live account is linked.
+  metaApiAccountId String?
+  brokerLogin      String?
+  brokerServer     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  trades   Trade[]
+  rules    Rule[]
+  insights DailyInsight[]
+
+  @@index([userId])
+}
+
+enum TradeDirection {
+  LONG
+  SHORT
+}
+
+enum TradeStatus {
+  OPEN
+  CLOSED
+}
+
+enum TradeGrade {
+  HIGH_PROBABILITY
+  LOW_PROBABILITY
+}
+
+model Trade {
+  id        String         @id @default(cuid())
+  accountId String
+  account   Account        @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  // Identifier from the broker (MetaApi position/deal id) for idempotent sync.
+  externalId String?
+
+  symbol    String // e.g. "EUR/USD"
+  direction TradeDirection
+  status    TradeStatus    @default(OPEN)
+  grade     TradeGrade?
+
+  entry      Decimal  @db.Decimal(18, 5)
+  stopLoss   Decimal? @db.Decimal(18, 5)
+  takeProfit Decimal? @db.Decimal(18, 5)
+  exitPrice  Decimal? @db.Decimal(18, 5)
+
+  volume     Decimal? @db.Decimal(18, 2)
+  // Realized P&L for closed trades; unrealized (floating) for open trades.
+  pnl        Decimal? @db.Decimal(18, 2)
+  rMultiple  Decimal? @db.Decimal(8, 2)
+
+  openedAt   DateTime
+  closedAt   DateTime?
+
+  tags       TagsOnTrades[]
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([accountId, externalId])
+  @@index([accountId, status])
+  @@index([accountId, openedAt])
+}
+
+model Tag {
+  id     String         @id @default(cuid())
+  name   String         @unique
+  trades TagsOnTrades[]
+}
+
+model TagsOnTrades {
+  tradeId String
+  trade   Trade  @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  tagId   String
+  tag     Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([tradeId, tagId])
+  @@index([tagId])
+}
+
+enum RuleCategory {
+  TIMING
+  RISK
+  ENTRY
+  MANAGEMENT
+}
+
+// Trading rules. Surfaced read-only on the Today page; the full management
+// experience is the separate "Rules" feature (built later).
+model Rule {
+  id        String       @id @default(cuid())
+  accountId String
+  account   Account      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  text      String
+  category  RuleCategory
+  active    Boolean      @default(true)
+  order     Int          @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([accountId, active])
+}
+
+// One generated insight per account per day (enables once-a-day caching).
+model DailyInsight {
+  id        String   @id @default(cuid())
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  // The calendar day (UTC midnight) the insight is for.
+  date      DateTime @db.Date
+  category  String // short kicker, e.g. "TIME", "RISK", "EDGE"
+  text      String
+  // Snapshot of the journal stats the insight was derived from.
+  metrics   Json?
+  // "openai" or "stub" — records how this insight was produced.
+  source    String   @default("stub")
+
+  createdAt DateTime @default(now())
+
+  @@unique([accountId, date])
+  @@index([accountId, date])
+}
