@@ -1,0 +1,1 @@
+# TradeNotti App
