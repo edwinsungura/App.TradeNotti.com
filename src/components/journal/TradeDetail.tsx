@@ -25,7 +25,7 @@ export default function TradeDetail({ trade }: { trade: JournalDetail }) {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="mx-auto max-w-6xl px-6 py-8">
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
         <Link
           href="/journal"
           className="mb-5 inline-flex items-center gap-1.5 text-[13px] font-medium text-muted hover:text-ink"
@@ -33,8 +33,10 @@ export default function TradeDetail({ trade }: { trade: JournalDetail }) {
           <ArrowLeftIcon size={15} /> Journal · {formatTradeTime(detail.openedAt)}
         </Link>
 
-        <div className="mb-7 flex items-center gap-4">
-          <h1 className="text-3xl font-bold tracking-tight">{detail.symbol}</h1>
+        <div className="mb-7 flex flex-wrap items-center gap-x-4 gap-y-2">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            {detail.symbol}
+          </h1>
           <DirBadge direction={detail.direction} size="lg" />
           <GradePill grade={detail.grade} />
         </div>

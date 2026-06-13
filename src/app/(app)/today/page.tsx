@@ -59,9 +59,9 @@ export default async function TodayPage({
       />
 
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-5xl px-6 py-8">
+        <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
           <div className="kicker mb-2">{formatLongDate()}</div>
-          <h1 className="mb-8 text-3xl font-bold tracking-tight">
+          <h1 className="mb-8 text-2xl font-bold tracking-tight sm:text-3xl">
             {greeting()}, {firstName}.
           </h1>
 

@@ -85,9 +85,9 @@ export default function JournalView({
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="mx-auto max-w-6xl px-6 py-8">
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight">Journal</h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Journal</h1>
           <FilterMenu filters={filters} setFilters={setFilters} options={options} />
         </div>
 

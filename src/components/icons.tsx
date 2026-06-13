@@ -140,6 +140,18 @@ export const ArrowLeftIcon = (p: IconProps) => (
   </Base>
 );
 
+export const MenuIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M3 6h18M3 12h18M3 18h18" />
+  </Base>
+);
+
+export const CloseIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M18 6L6 18M6 6l12 12" />
+  </Base>
+);
+
 export const FilterIcon = (p: IconProps) => (
   <Base {...p}>
     <path d="M3 5h18M6 12h12M10 19h4" />

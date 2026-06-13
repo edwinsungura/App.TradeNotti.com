@@ -1,4 +1,5 @@
 import AccountSwitcher, { type AccountOption } from "./AccountSwitcher";
+import MobileMenuButton from "./MobileMenuButton";
 import { BellIcon } from "./icons";
 
 export default function TopBar({
@@ -11,8 +12,11 @@ export default function TopBar({
   userInitial: string;
 }) {
   return (
-    <header className="flex items-center justify-between border-b border-line bg-surface px-6 py-3">
-      <AccountSwitcher accounts={accounts} activeId={activeId} />
+    <header className="flex items-center justify-between gap-2 border-b border-line bg-surface px-4 py-3 sm:px-6">
+      <div className="flex min-w-0 items-center gap-2">
+        <MobileMenuButton />
+        <AccountSwitcher accounts={accounts} activeId={activeId} />
+      </div>
 
       <div className="flex items-center gap-3">
         <button
