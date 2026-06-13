@@ -138,10 +138,10 @@ export default function TodaysTrades({
                     <DirBadge direction={t.direction} />
                   </td>
                   <td className="num text-right">{formatPrice(t.entry)}</td>
-                  <td className="num text-right text-muted">
+                  <td className="num text-right text-ink-soft">
                     {formatPrice(t.stopLoss)}
                   </td>
-                  <td className="num text-right text-muted">
+                  <td className="num text-right text-ink-soft">
                     {formatPrice(t.takeProfit)}
                   </td>
                   <td className={`num text-right font-medium ${signedClass(t.pnl)}`}>
@@ -169,7 +169,7 @@ export default function TodaysTrades({
                       )}
                     </span>
                   </td>
-                  <td className="num !pr-0 text-right text-[12px] text-faint">
+                  <td className="num !pr-0 text-right text-[12px] text-muted">
                     {formatTradeTime(t.openedAt)}
                   </td>
                 </tr>
