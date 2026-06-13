@@ -29,6 +29,7 @@ export interface JournalDetail extends JournalRow {
   notes: string | null;
   marketDirection: string | null;
   phaseOfMarket: string | null;
+  stopLossNote: string | null;
   roi: number | null; // percent of account balance
   currency: string;
   screenshots: { before: string | null; after: string | null };
@@ -99,6 +100,7 @@ export async function getTradeDetail(
     notes: t.notes,
     marketDirection: t.marketDirection,
     phaseOfMarket: t.phaseOfMarket,
+    stopLossNote: t.stopLossNote,
     roi,
     currency: t.account.currency,
     screenshots: { before: shot("BEFORE"), after: shot("AFTER") },

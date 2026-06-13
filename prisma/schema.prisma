@@ -102,6 +102,7 @@ model Trade {
   notes           String? @db.Text
   marketDirection String? // e.g. "Bullish", "Bearish", "Ranging"
   phaseOfMarket   String? // e.g. "Accumulation", "Markup", "Distribution", "Markdown"
+  stopLossNote    String? // trader's own stop-loss note (e.g. "27 pips", "below structure")
 
   tags        TagsOnTrades[]
   screenshots Screenshot[]

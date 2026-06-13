@@ -44,6 +44,38 @@ function Row({
 const selectClass =
   "cursor-pointer rounded-md bg-transparent text-right text-[13.5px] font-medium text-ink outline-none hover:text-accent";
 
+// A right-aligned inline text field that saves when you click away or press Enter.
+function EditableText({
+  value,
+  placeholder,
+  onSave,
+}: {
+  value: string | null;
+  placeholder: string;
+  onSave: (next: string | null) => void;
+}) {
+  const [draft, setDraft] = useState(value ?? "");
+
+  const commit = () => {
+    const next = draft.trim() || null;
+    if (next !== (value ?? null)) onSave(next);
+  };
+
+  return (
+    <input
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.currentTarget.blur();
+        if (e.key === "Escape") setDraft(value ?? "");
+      }}
+      placeholder={placeholder}
+      className="w-36 rounded-md bg-transparent px-1 py-0.5 text-right text-[13.5px] font-medium text-ink outline-none placeholder:font-normal placeholder:text-faint hover:bg-black/[0.03] focus:bg-black/[0.03]"
+    />
+  );
+}
+
 export default function OutcomePanel({
   detail,
   metrics,
@@ -96,7 +128,11 @@ export default function OutcomePanel({
           {detail.closedAt ? `${metrics.exitAt} · ${metrics.duration}` : "Open"}
         </Row>
         <Row label="Stop loss" source="JOURNAL">
-          {metrics.stopLoss}
+          <EditableText
+            value={detail.stopLossNote}
+            placeholder={metrics.stopLoss}
+            onSave={(stopLossNote) => patch({ stopLossNote })}
+          />
         </Row>
         <Row label="Position size" source="AUTO">
           {metrics.positionSize}
@@ -133,17 +169,11 @@ export default function OutcomePanel({
         </Row>
 
         <Row label="Phase of market" source="JOURNAL">
-          <select
-            value={detail.phaseOfMarket ?? ""}
-            onChange={(e) => patch({ phaseOfMarket: e.target.value || null })}
-            className={selectClass}
-          >
-            <option value="">—</option>
-            <option>Accumulation</option>
-            <option>Markup</option>
-            <option>Distribution</option>
-            <option>Markdown</option>
-          </select>
+          <EditableText
+            value={detail.phaseOfMarket}
+            placeholder="e.g. Markup"
+            onSave={(phaseOfMarket) => patch({ phaseOfMarket })}
+          />
         </Row>
       </div>
 

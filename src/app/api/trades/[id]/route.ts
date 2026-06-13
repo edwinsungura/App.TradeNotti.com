@@ -46,6 +46,7 @@ export async function PATCH(
     notes?: string | null;
     marketDirection?: string | null;
     phaseOfMarket?: string | null;
+    stopLossNote?: string | null;
     grade?: TradeGrade | null;
     tags?: string[];
   };
@@ -60,6 +61,7 @@ export async function PATCH(
   if (body.marketDirection !== undefined)
     data.marketDirection = body.marketDirection;
   if (body.phaseOfMarket !== undefined) data.phaseOfMarket = body.phaseOfMarket;
+  if (body.stopLossNote !== undefined) data.stopLossNote = body.stopLossNote;
   if (body.grade !== undefined) data.grade = body.grade;
 
   if (Object.keys(data).length > 0) {
