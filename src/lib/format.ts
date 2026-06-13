@@ -54,6 +54,52 @@ export function greeting(date = new Date()): string {
   return "Good evening";
 }
 
+// Pip size per instrument family (rough but correct for the common symbols).
+function pipSize(symbol: string): number {
+  const s = symbol.toUpperCase();
+  if (s.includes("JPY")) return 0.01;
+  if (s.includes("XAU") || s.includes("GOLD")) return 0.1;
+  if (s.includes("BTC") || s.includes("ETH")) return 1;
+  return 0.0001;
+}
+
+// Stop distance expressed in pips, e.g. "27 pips".
+export function formatPips(
+  entry: number,
+  stopLoss: number | null,
+  symbol: string,
+): string {
+  if (stopLoss == null) return "—";
+  const pips = Math.abs(entry - stopLoss) / pipSize(symbol);
+  return `${Math.round(pips)} pips`;
+}
+
+export function formatLots(volume: number | null): string {
+  if (volume == null) return "—";
+  return `${volume.toFixed(2)} lots`;
+}
+
+export function formatPercent(n: number | null): string {
+  if (n == null) return "—";
+  const sign = n >= 0 ? "+" : "";
+  return `${sign}${n.toFixed(2)}%`;
+}
+
+// Holding time between entry and exit, e.g. "2h 13m". Open trades return "Open".
+export function formatDuration(
+  startIso: string,
+  endIso: string | null,
+): string {
+  if (!endIso) return "Open";
+  const ms = new Date(endIso).getTime() - new Date(startIso).getTime();
+  if (ms < 0) return "—";
+  const mins = Math.round(ms / 60000);
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  if (h === 0) return `${m}m`;
+  return `${h}h ${m}m`;
+}
+
 export function formatLongDate(date = new Date()): string {
   return date
     .toLocaleDateString("en-US", {

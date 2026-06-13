@@ -98,7 +98,13 @@ model Trade {
   openedAt   DateTime
   closedAt   DateTime?
 
-  tags       TagsOnTrades[]
+  // Manually journaled fields (entered by the trader, not the broker feed).
+  notes           String? @db.Text
+  marketDirection String? // e.g. "Bullish", "Bearish", "Ranging"
+  phaseOfMarket   String? // e.g. "Accumulation", "Markup", "Distribution", "Markdown"
+
+  tags        TagsOnTrades[]
+  screenshots Screenshot[]
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -106,6 +112,27 @@ model Trade {
   @@unique([accountId, externalId])
   @@index([accountId, status])
   @@index([accountId, openedAt])
+}
+
+enum ScreenshotKind {
+  BEFORE
+  AFTER
+}
+
+// Before/after trade screenshots. Stored as a base64 data URL in the database
+// (one image per kind per trade).
+model Screenshot {
+  id      String         @id @default(cuid())
+  tradeId String
+  trade   Trade          @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  kind    ScreenshotKind
+  dataUrl String         @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tradeId, kind])
+  @@index([tradeId])
 }
 
 model Tag {

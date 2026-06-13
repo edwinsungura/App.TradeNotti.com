@@ -1,25 +1,26 @@
+import { notFound } from "next/navigation";
 import TopBar from "@/components/TopBar";
-import JournalView from "@/components/journal/JournalView";
+import TradeDetail from "@/components/journal/TradeDetail";
 import {
   getAccountsForCurrentUser,
   getActiveAccount,
   getCurrentUser,
 } from "@/lib/account";
-import { getJournalTrades, getJournalFilterOptions } from "@/lib/journal";
+import { getTradeDetail } from "@/lib/journal";
 
 export const dynamic = "force-dynamic";
 
-export default async function JournalPage({
-  searchParams,
+export default async function TradeDetailPage({
+  params,
 }: {
-  searchParams: Promise<{ account?: string }>;
+  params: Promise<{ id: string }>;
 }) {
-  const { account: accountParam } = await searchParams;
+  const { id } = await params;
 
   const [user, accounts, account] = await Promise.all([
     getCurrentUser(),
     getAccountsForCurrentUser(),
-    getActiveAccount(accountParam),
+    getActiveAccount(),
   ]);
 
   if (!account) {
@@ -30,10 +31,8 @@ export default async function JournalPage({
     );
   }
 
-  const [trades, options] = await Promise.all([
-    getJournalTrades(account.id),
-    getJournalFilterOptions(account.id),
-  ]);
+  const trade = await getTradeDetail(account.id, id);
+  if (!trade) notFound();
 
   const initial = (user?.name ?? "T").charAt(0).toUpperCase();
 
@@ -50,7 +49,7 @@ export default async function JournalPage({
         activeId={account.id}
         userInitial={initial}
       />
-      <JournalView trades={trades} options={options} />
+      <TradeDetail trade={trade} />
     </>
   );
 }

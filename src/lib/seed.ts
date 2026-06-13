@@ -21,6 +21,10 @@ interface SeedTrade {
   rMultiple: number;
   openedAt: Date;
   tags: string[];
+  volume?: number;
+  notes?: string;
+  marketDirection?: string;
+  phaseOfMarket?: string;
 }
 
 // Historical CLOSED trades. London-session (08:00 UTC) trades intentionally
@@ -28,11 +32,11 @@ interface SeedTrade {
 // surfaces a real, data-derived edge.
 const CLOSED_TRADES: SeedTrade[] = [
   // London session — strong
-  { symbol: "XAU/USD", direction: "LONG", grade: "HIGH_PROBABILITY", entry: 2342.1, stopLoss: 2336.8, takeProfit: 2358.4, pnl: 612, rMultiple: 3.1, openedAt: at(1, 8), tags: ["Breakout", "A+ setup"] },
+  { symbol: "XAU/USD", direction: "LONG", grade: "HIGH_PROBABILITY", entry: 2342.1, stopLoss: 2336.8, takeProfit: 2358.4, pnl: 612, rMultiple: 3.1, openedAt: at(1, 8), tags: ["Breakout", "A+ setup"], volume: 0.3, marketDirection: "Bullish", phaseOfMarket: "Markup", notes: "Textbook breakout above the overnight range on the London open. Strong follow-through, no hesitation. Let the runner work to the full target." },
   { symbol: "AUD/USD", direction: "SHORT", grade: "HIGH_PROBABILITY", entry: 0.6642, stopLoss: 0.6658, takeProfit: 0.661, pnl: 192, rMultiple: 1.4, openedAt: at(3, 8), tags: ["Confirmation", "London open"] },
   { symbol: "XAU/USD", direction: "LONG", grade: "HIGH_PROBABILITY", entry: 2328.4, stopLoss: 2322.1, takeProfit: 2342.2, pnl: 410, rMultiple: 2.2, openedAt: at(4, 8), tags: ["Trend cont.", "London open"] },
   { symbol: "GBP/USD", direction: "SHORT", grade: "HIGH_PROBABILITY", entry: 1.2684, stopLoss: 1.2702, takeProfit: 1.2642, pnl: 218, rMultiple: 2.3, openedAt: at(5, 8), tags: ["Reversal", "London open"] },
-  { symbol: "EUR/USD", direction: "LONG", grade: "HIGH_PROBABILITY", entry: 1.084, stopLoss: 1.0826, takeProfit: 1.0872, pnl: 245, rMultiple: 2.0, openedAt: at(7, 8), tags: ["Confirmation", "London open"] },
+  { symbol: "EUR/USD", direction: "LONG", grade: "HIGH_PROBABILITY", entry: 1.084, stopLoss: 1.0826, takeProfit: 1.0872, pnl: 245, rMultiple: 2.0, openedAt: at(7, 8), tags: ["Confirmation", "London open"], volume: 0.5, marketDirection: "Bullish", phaseOfMarket: "Markup", notes: "EUR/USD setup played out as planned. Entry was clean on the pullback to the key level after the confirmation signal. Held for the measured move and trimmed half at first target.\n\nWhat I'd do differently: sized the runner too small relative to conviction." },
   // New York session — weaker
   { symbol: "USD/CAD", direction: "LONG", grade: "LOW_PROBABILITY", entry: 1.3621, stopLoss: 1.3605, takeProfit: 1.3652, pnl: -160, rMultiple: -1.0, openedAt: at(3, 14), tags: ["News play"] },
   { symbol: "EUR/GBP", direction: "LONG", grade: "LOW_PROBABILITY", entry: 0.8412, stopLoss: 0.8402, takeProfit: 0.8432, pnl: 95, rMultiple: 1.0, openedAt: at(4, 14), tags: ["VWAP bounce"] },
@@ -112,10 +116,15 @@ export async function seedDatabase(): Promise<SeedSummary> {
         stopLoss: t.stopLoss,
         takeProfit: t.takeProfit,
         exitPrice: t.takeProfit,
+        volume: t.volume ?? 0.5,
         pnl: t.pnl,
         rMultiple: t.rMultiple,
+        notes: t.notes,
+        marketDirection: t.marketDirection,
+        phaseOfMarket: t.phaseOfMarket,
         openedAt: t.openedAt,
-        closedAt: t.openedAt,
+        // Close ~2h13m after entry so the holding-time metric is realistic.
+        closedAt: new Date(t.openedAt.getTime() + (2 * 60 + 13) * 60 * 1000),
         tags: {
           create: t.tags.map((name) => ({ tagId: tagByName.get(name)! })),
         } satisfies Prisma.TagsOnTradesCreateNestedManyWithoutTradeInput,
