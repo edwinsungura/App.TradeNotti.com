@@ -12,7 +12,6 @@ import {
   PartnersIcon,
   ResourcesIcon,
   PinboardIcon,
-  GiftIcon,
   SettingsIcon,
 } from "./icons";
 
@@ -31,7 +30,6 @@ const LIBRARY = [
 ];
 
 const FOOTER = [
-  { href: "/refer", label: "Refer & earn", Icon: GiftIcon },
   { href: "/settings", label: "Settings", Icon: SettingsIcon },
 ];
 
