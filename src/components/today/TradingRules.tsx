@@ -5,8 +5,8 @@ import type { RuleView } from "@/lib/rules";
 // Read-only view of the trader's rules (authored in the Rules feature).
 export default function TradingRules({ rules }: { rules: RuleView[] }) {
   return (
-    <section className="rounded-2xl border border-line bg-surface px-7 py-7">
-      <div className="mb-6 flex items-center justify-between">
+    <section className="rounded-2xl border border-line bg-surface p-6">
+      <div className="mb-5 flex items-center justify-between">
         <h2 className="text-[15px] font-semibold">Trading rules</h2>
         <Link
           href="/rules"
@@ -21,11 +21,11 @@ export default function TradingRules({ rules }: { rules: RuleView[] }) {
           No rules yet. Add your trading rules to see them here.
         </p>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           {rules.map((rule) => (
             <div
               key={rule.id}
-              className="flex items-center gap-3 rounded-xl bg-black/[0.02] px-4 py-4"
+              className="flex items-center gap-3 rounded-xl bg-black/[0.02] px-4 py-3"
             >
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-profit-soft text-profit">
                 <CheckIcon size={13} />

@@ -59,7 +59,7 @@ export default async function TodayPage({
       />
 
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-6xl px-6 py-8">
+        <div className="max-w-5xl px-6 py-8">
           <div className="kicker mb-2">{formatLongDate()}</div>
           <h1 className="mb-8 text-3xl font-bold tracking-tight">
             {greeting()}, {firstName}.
