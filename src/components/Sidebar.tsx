@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Logo from "./Logo";
 import {
   SunIcon,
   JournalIcon,
@@ -69,10 +70,8 @@ export default function Sidebar() {
 
   return (
     <aside className="flex h-screen w-60 shrink-0 flex-col border-r border-line bg-surface px-3 py-4">
-      <div className="px-3 pb-5">
-        <span className="text-[17px] font-semibold tracking-tight">
-          TradeNotti
-        </span>
+      <div className="px-3 pb-6 pt-1">
+        <Logo />
       </div>
 
       <nav className="flex flex-col gap-0.5">
