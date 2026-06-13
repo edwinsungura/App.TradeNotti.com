@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import type { JournalRow } from "@/lib/journal";
 import { formatPrice, formatMoney, formatR, formatTradeTime } from "@/lib/format";
@@ -66,6 +66,7 @@ export default function JournalView({
   trades: JournalRow[];
   options: { symbols: string[]; tags: string[] };
 }) {
+  const router = useRouter();
   const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("ALL");
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
 
@@ -178,17 +179,17 @@ export default function JournalView({
           ))}
         </div>
 
-        <section className="rounded-2xl border border-line bg-surface px-2 py-2">
+        <section className="rounded-2xl border border-line bg-surface p-6">
           {rows.length === 0 ? (
-            <p className="px-4 py-10 text-center text-sm text-faint">
+            <p className="py-10 text-center text-sm text-faint">
               No trades match these filters.
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[860px] text-left">
                 <thead>
-                  <tr className="kicker border-b border-line [&>th]:px-3 [&>th]:pb-2 [&>th]:pt-2 [&>th]:font-semibold">
-                    <th className="!pl-4">Pair</th>
+                  <tr className="kicker border-b border-line [&>th]:px-3 [&>th]:pb-2.5 [&>th]:font-semibold">
+                    <th className="!pl-0">Pair</th>
                     <th>Dir.</th>
                     <th className="text-right">Entry</th>
                     <th className="text-right">SL</th>
@@ -197,56 +198,48 @@ export default function JournalView({
                     <th className="text-right">R</th>
                     <th>Grade</th>
                     <th>Tags</th>
-                    <th className="!pr-4 text-right">Date</th>
+                    <th className="!pr-0 text-right">Date</th>
                   </tr>
                 </thead>
                 <tbody className="text-[13.5px]">
                   {rows.map((t) => (
                     <tr
                       key={t.id}
-                      className="group border-b border-line/60 last:border-0"
+                      onClick={() => router.push(`/journal/${t.id}`)}
+                      className="cursor-pointer border-b border-line/70 transition-colors last:border-0 hover:bg-black/[0.02] [&>td]:px-3 [&>td]:py-3.5"
                     >
                       <td className="!pl-0">
-                        <Link
-                          href={`/journal/${t.id}`}
-                          className="flex items-center gap-2 rounded-l-lg px-4 py-3.5 font-medium group-hover:bg-black/[0.02]"
-                        >
+                        <span className="flex items-center gap-2 font-medium">
                           <span
                             className={`h-2 w-2 rounded-full ${
                               (t.pnl ?? 0) >= 0 ? "bg-profit" : "bg-loss"
                             }`}
                           />
                           {t.symbol}
-                        </Link>
+                        </span>
                       </td>
-                      <Cell id={t.id}>
+                      <td>
                         <DirBadge direction={t.direction} />
-                      </Cell>
-                      <Cell id={t.id} className="num text-right">
-                        {formatPrice(t.entry)}
-                      </Cell>
-                      <Cell id={t.id} className="num text-right text-ink-soft">
+                      </td>
+                      <td className="num text-right">{formatPrice(t.entry)}</td>
+                      <td className="num text-right text-ink-soft">
                         {formatPrice(t.stopLoss)}
-                      </Cell>
-                      <Cell id={t.id} className="num text-right text-ink-soft">
+                      </td>
+                      <td className="num text-right text-ink-soft">
                         {formatPrice(t.takeProfit)}
-                      </Cell>
-                      <Cell
-                        id={t.id}
+                      </td>
+                      <td
                         className={`num text-right font-medium ${signedClass(t.pnl)}`}
                       >
                         {formatMoney(t.pnl)}
-                      </Cell>
-                      <Cell
-                        id={t.id}
-                        className={`num text-right ${signedClass(t.rMultiple)}`}
-                      >
+                      </td>
+                      <td className={`num text-right ${signedClass(t.rMultiple)}`}>
                         {formatR(t.rMultiple)}
-                      </Cell>
-                      <Cell id={t.id}>
+                      </td>
+                      <td>
                         <GradePill grade={t.grade} />
-                      </Cell>
-                      <Cell id={t.id}>
+                      </td>
+                      <td>
                         <span className="flex flex-wrap gap-1.5">
                           {t.tags.length === 0 ? (
                             <span className="text-faint">—</span>
@@ -254,14 +247,9 @@ export default function JournalView({
                             t.tags.map((tag) => <TagChip key={tag}>{tag}</TagChip>)
                           )}
                         </span>
-                      </Cell>
-                      <td className="!pr-0">
-                        <Link
-                          href={`/journal/${t.id}`}
-                          className="block rounded-r-lg px-4 py-3.5 text-right text-[12px] text-muted group-hover:bg-black/[0.02]"
-                        >
-                          {formatTradeTime(t.openedAt)}
-                        </Link>
+                      </td>
+                      <td className="num !pr-0 text-right text-[12px] text-muted">
+                        {formatTradeTime(t.openedAt)}
                       </td>
                     </tr>
                   ))}
@@ -272,27 +260,5 @@ export default function JournalView({
         </section>
       </div>
     </div>
-  );
-}
-
-// Table cell wrapped in a link so the whole row navigates to the detail page.
-function Cell({
-  id,
-  className = "",
-  children,
-}: {
-  id: string;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <td className="p-0">
-      <Link
-        href={`/journal/${id}`}
-        className={`block px-3 py-3.5 group-hover:bg-black/[0.02] ${className}`}
-      >
-        {children}
-      </Link>
-    </td>
   );
 }
