@@ -109,6 +109,13 @@ export const ClockIcon = (p: IconProps) => (
   </Base>
 );
 
+export const TrendingUpIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M3 17l6-6 4 4 7-7" />
+    <path d="M17 8h4v4" />
+  </Base>
+);
+
 export const ArrowRightIcon = (p: IconProps) => (
   <Base {...p}>
     <path d="M5 12h14M13 6l6 6-6 6" />

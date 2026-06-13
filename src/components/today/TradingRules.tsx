@@ -25,15 +25,12 @@ export default function TradingRules({ rules }: { rules: RuleView[] }) {
           {rules.map((rule) => (
             <div
               key={rule.id}
-              className="flex items-center justify-between gap-3 rounded-xl bg-black/[0.02] px-4 py-3"
+              className="flex items-center gap-3 rounded-xl bg-black/[0.02] px-4 py-3"
             >
-              <div className="flex items-center gap-3">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-profit-soft text-profit">
-                  <CheckIcon size={13} />
-                </span>
-                <span className="text-[13.5px] text-ink-soft">{rule.text}</span>
-              </div>
-              <span className="kicker shrink-0">{rule.category}</span>
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-profit-soft text-profit">
+                <CheckIcon size={13} />
+              </span>
+              <span className="text-[13.5px] text-ink-soft">{rule.text}</span>
             </div>
           ))}
         </div>
