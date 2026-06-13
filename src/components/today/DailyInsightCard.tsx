@@ -10,13 +10,13 @@ export default function DailyInsightCard({
   text: string;
 }) {
   return (
-    <section className="rounded-2xl border border-accent/30 bg-accent-bg/70 p-6">
-      <div className="kicker mb-3 text-accent/80">Daily insight · {category}</div>
+    <section className="rounded-2xl border border-accent/30 bg-accent-bg/70 px-7 py-8">
+      <div className="kicker mb-5 text-accent/80">Daily insight · {category}</div>
       <div className="flex items-start gap-4">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-white">
-          <TrendingUpIcon size={18} />
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-white">
+          <TrendingUpIcon size={20} />
         </span>
-        <p className="pt-1 text-[15px] leading-relaxed text-ink">{text}</p>
+        <p className="pt-1.5 text-[15px] leading-relaxed text-ink">{text}</p>
       </div>
     </section>
   );

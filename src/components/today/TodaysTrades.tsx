@@ -83,8 +83,8 @@ export default function TodaysTrades({
   }, [accountId]);
 
   return (
-    <section className="rounded-2xl border border-line bg-surface p-6">
-      <div className="mb-4 flex items-end justify-between">
+    <section className="rounded-2xl border border-line bg-surface px-7 py-7">
+      <div className="mb-6 flex items-end justify-between">
         <div>
           <div className="kicker mb-1">Logged today</div>
           <h2 className="text-[15px] font-semibold">Today&apos;s trades</h2>
@@ -122,7 +122,7 @@ export default function TodaysTrades({
               {trades.map((t) => (
                 <tr
                   key={t.id}
-                  className="border-b border-line/70 last:border-0 [&>td]:px-3 [&>td]:py-3.5"
+                  className="border-b border-line/70 last:border-0 [&>td]:px-3 [&>td]:py-5"
                 >
                   <td className="!pl-0">
                     <span className="flex items-center gap-2 font-medium">
