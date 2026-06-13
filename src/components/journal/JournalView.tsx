@@ -5,7 +5,11 @@ import { useMemo, useState } from "react";
 import type { JournalRow } from "@/lib/journal";
 import { formatPrice, formatMoney, formatR, formatTradeTime } from "@/lib/format";
 import { DirBadge, GradePill, TagChip, signedClass } from "./cells";
-import FilterMenu, { EMPTY_FILTERS, type Filters } from "./FilterMenu";
+import FilterMenu, {
+  EMPTY_FILTERS,
+  formatRFilter,
+  type Filters,
+} from "./FilterMenu";
 
 const TABS = [
   { id: "ALL", label: "All" },
@@ -33,8 +37,12 @@ function applyFilters(rows: JournalRow[], f: Filters): JournalRow[] {
     if (f.pairs.length && !f.pairs.includes(t.symbol)) return false;
     if (f.tags.length && !f.tags.some((tag) => t.tags.includes(tag)))
       return false;
-    if (f.minR != null && !(t.rMultiple != null && t.rMultiple >= f.minR))
-      return false;
+    if (f.rMultiple) {
+      if (t.rMultiple == null) return false;
+      const { op, value } = f.rMultiple;
+      if (op === "gte" && !(t.rMultiple >= value)) return false;
+      if (op === "lte" && !(t.rMultiple <= value)) return false;
+    }
     if (!withinRange(t.openedAt, f.dateRange)) return false;
     return true;
   });
@@ -138,10 +146,10 @@ export default function JournalView({
               onRemove={() => setFilters({ ...filters, grade: null })}
             />
           )}
-          {filters.minR != null && (
+          {filters.rMultiple && (
             <Chip
-              label={`≥ +${filters.minR}R`}
-              onRemove={() => setFilters({ ...filters, minR: null })}
+              label={formatRFilter(filters.rMultiple)}
+              onRemove={() => setFilters({ ...filters, rMultiple: null })}
             />
           )}
           {filters.pairs.map((p) => (

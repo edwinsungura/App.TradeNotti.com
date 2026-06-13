@@ -19,8 +19,15 @@ export interface Filters {
   grade: TradeGrade | null;
   pairs: string[];
   tags: string[];
-  minR: number | null;
+  rMultiple: { op: "gte" | "lte"; value: number } | null;
   dateRange: "1d" | "7d" | "30d" | null;
+}
+
+// Selectable R thresholds: ±1R … ±10R.
+export const R_VALUES = Array.from({ length: 10 }, (_, i) => i + 1);
+
+export function formatRFilter(r: { op: "gte" | "lte"; value: number }): string {
+  return `${r.op === "gte" ? "≥" : "≤"} +${r.value}R`;
 }
 
 export const EMPTY_FILTERS: Filters = {
@@ -29,7 +36,7 @@ export const EMPTY_FILTERS: Filters = {
   grade: null,
   pairs: [],
   tags: [],
-  minR: null,
+  rMultiple: null,
   dateRange: null,
 };
 
@@ -38,7 +45,7 @@ export function countActive(f: Filters): number {
     (f.direction ? 1 : 0) +
     (f.outcome ? 1 : 0) +
     (f.grade ? 1 : 0) +
-    (f.minR != null ? 1 : 0) +
+    (f.rMultiple ? 1 : 0) +
     (f.dateRange ? 1 : 0) +
     f.pairs.length +
     f.tags.length
@@ -95,6 +102,10 @@ export default function FilterMenu({
 }) {
   const [open, setOpen] = useState(false);
   const [section, setSection] = useState<Section | null>(null);
+  // Which comparison the R-multiple value buttons apply (more-than / less-than).
+  const [rOp, setROp] = useState<"gte" | "lte">(
+    filters.rMultiple?.op ?? "gte",
+  );
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -283,20 +294,67 @@ export default function FilterMenu({
                         ))
                       ))}
 
-                    {id === "rmultiple" &&
-                      ([1, 2, 3] as const).map((r) => (
-                        <Option
-                          key={r}
-                          label={`≥ +${r}R`}
-                          active={filters.minR === r}
-                          onClick={() =>
-                            setFilters({
-                              ...filters,
-                              minR: filters.minR === r ? null : r,
-                            })
-                          }
-                        />
-                      ))}
+                    {id === "rmultiple" && (
+                      <div className="px-1.5 py-1">
+                        {/* More-than / less-than toggle */}
+                        <div className="mb-2 inline-flex rounded-md bg-black/[0.04] p-0.5 text-[12px] font-medium">
+                          {(
+                            [
+                              ["gte", "More than ≥"],
+                              ["lte", "Less than ≤"],
+                            ] as const
+                          ).map(([op, lbl]) => (
+                            <button
+                              key={op}
+                              onClick={() => {
+                                setROp(op);
+                                if (filters.rMultiple)
+                                  setFilters({
+                                    ...filters,
+                                    rMultiple: { ...filters.rMultiple, op },
+                                  });
+                              }}
+                              className={`rounded px-2 py-1 transition-colors ${
+                                rOp === op
+                                  ? "bg-surface text-ink shadow-sm"
+                                  : "text-muted hover:text-ink"
+                              }`}
+                            >
+                              {lbl}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Value grid 1R … 10R */}
+                        <div className="grid grid-cols-5 gap-1">
+                          {R_VALUES.map((v) => {
+                            const active =
+                              filters.rMultiple?.op === rOp &&
+                              filters.rMultiple?.value === v;
+                            return (
+                              <button
+                                key={v}
+                                onClick={() =>
+                                  setFilters({
+                                    ...filters,
+                                    rMultiple: active
+                                      ? null
+                                      : { op: rOp, value: v },
+                                  })
+                                }
+                                className={`rounded-md py-1.5 text-[12px] font-medium transition-colors ${
+                                  active
+                                    ? "bg-accent text-white"
+                                    : "bg-black/[0.03] text-ink-soft hover:bg-black/[0.06]"
+                                }`}
+                              >
+                                {v}R
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
