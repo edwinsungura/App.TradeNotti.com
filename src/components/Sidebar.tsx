@@ -52,10 +52,10 @@ function NavLink({
     <Link
       href={href}
       onClick={onNavigate}
-      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
         active
           ? "bg-ink text-white"
-          : "text-ink-soft hover:bg-black/[0.04]"
+          : "text-ink hover:bg-black/[0.04]"
       }`}
     >
       <span className={active ? "text-white" : "text-faint"}>
