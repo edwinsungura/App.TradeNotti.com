@@ -2,8 +2,16 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
+import { useEditor, EditorContent, type Editor } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import TaskList from "@tiptap/extension-task-list";
@@ -11,8 +19,20 @@ import TaskItem from "@tiptap/extension-task-item";
 import TextAlign from "@tiptap/extension-text-align";
 import { CharacterCount } from "@tiptap/extensions";
 import type { NoteData, TemplateData } from "@/lib/notebook";
-import EditorToolbar from "./EditorToolbar";
-import { ArrowLeftIcon, TemplateIcon, ChevronIcon, TrashIcon, PlusIcon } from "../icons";
+import {
+  ArrowLeftIcon,
+  TemplateIcon,
+  ChevronIcon,
+  TrashIcon,
+  PlusIcon,
+  ListBulletIcon,
+  ListOrderedIcon,
+  ChecklistIcon,
+  QuoteIcon,
+  CodeBlockIcon,
+  MinusIcon,
+  LinkIcon,
+} from "../icons";
 
 type Status = "idle" | "saving" | "saved";
 
@@ -24,6 +44,37 @@ function dayLabel(date: string): string {
     year: "numeric",
     timeZone: "UTC",
   });
+}
+
+// --- slash-command block menu items ---------------------------------------
+interface SlashItem {
+  title: string;
+  desc: string;
+  keywords: string;
+  icon: React.ReactNode;
+  run: (e: Editor) => void;
+}
+
+const HLabel = (n: number) => <span className="text-[13px] font-bold">H{n}</span>;
+
+const SLASH_ITEMS: SlashItem[] = [
+  { title: "Text", desc: "Plain paragraph", keywords: "text paragraph body", icon: <span className="text-[13px]">P</span>, run: (e) => e.chain().focus().setParagraph().run() },
+  { title: "Heading 1", desc: "Big section heading", keywords: "h1 title heading", icon: HLabel(1), run: (e) => e.chain().focus().toggleHeading({ level: 1 }).run() },
+  { title: "Heading 2", desc: "Medium heading", keywords: "h2 heading subtitle", icon: HLabel(2), run: (e) => e.chain().focus().toggleHeading({ level: 2 }).run() },
+  { title: "Heading 3", desc: "Small heading", keywords: "h3 heading", icon: HLabel(3), run: (e) => e.chain().focus().toggleHeading({ level: 3 }).run() },
+  { title: "Bullet list", desc: "Simple bulleted list", keywords: "bullet unordered list ul", icon: <ListBulletIcon size={16} />, run: (e) => e.chain().focus().toggleBulletList().run() },
+  { title: "Numbered list", desc: "Ordered list", keywords: "numbered ordered list ol", icon: <ListOrderedIcon size={16} />, run: (e) => e.chain().focus().toggleOrderedList().run() },
+  { title: "To-do list", desc: "Checkbox tasks", keywords: "todo task checkbox check", icon: <ChecklistIcon size={16} />, run: (e) => e.chain().focus().toggleTaskList().run() },
+  { title: "Quote", desc: "Capture a quote", keywords: "quote blockquote", icon: <QuoteIcon size={16} />, run: (e) => e.chain().focus().toggleBlockquote().run() },
+  { title: "Code block", desc: "Code with syntax", keywords: "code block pre", icon: <CodeBlockIcon size={16} />, run: (e) => e.chain().focus().toggleCodeBlock().run() },
+  { title: "Divider", desc: "Horizontal rule", keywords: "divider rule hr line separator", icon: <MinusIcon size={16} />, run: (e) => e.chain().focus().setHorizontalRule().run() },
+];
+
+interface SlashState {
+  query: string;
+  range: { from: number; to: number };
+  top: number;
+  left: number;
 }
 
 export default function NoteEditor({
@@ -42,9 +93,27 @@ export default function NoteEditor({
   const [menuOpen, setMenuOpen] = useState(false);
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
 
+  const [slash, setSlash] = useState<SlashState | null>(null);
+  const [slashIndex, setSlashIndex] = useState(0);
+
   const titleRef = useRef(title);
   titleRef.current = title;
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Detect a "/" trigger at the cursor and open the block menu beside it.
+  const detectSlash = useCallback((e: Editor) => {
+    const { state } = e;
+    const { from, empty } = state.selection;
+    if (!empty) return setSlash(null);
+    const $from = state.doc.resolve(from);
+    const before = $from.parent.textBetween(0, $from.parentOffset, "\n", "￼");
+    const m = /(?:^|\s)\/([a-zA-Z]*)$/.exec(before);
+    if (!m) return setSlash(null);
+    const slashPos = from - (m[1].length + 1);
+    const coords = e.view.coordsAtPos(from);
+    setSlash({ query: m[1], range: { from: slashPos, to: from }, top: coords.bottom + 6, left: coords.left });
+    setSlashIndex(0);
+  }, []);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -54,7 +123,7 @@ export default function NoteEditor({
         link: { openOnClick: false },
       }),
       Placeholder.configure({
-        placeholder: "Start writing, or pick a template above…",
+        placeholder: "Write something, or press '/' for commands…",
       }),
       TaskList,
       TaskItem.configure({ nested: true }),
@@ -63,7 +132,11 @@ export default function NoteEditor({
     ],
     content: (note?.content as object) ?? "",
     editorProps: { attributes: { class: "tiptap-content" } },
-    onUpdate: () => scheduleSave(),
+    onUpdate: ({ editor }) => {
+      scheduleSave();
+      detectSlash(editor);
+    },
+    onSelectionUpdate: ({ editor }) => detectSlash(editor),
     onTransaction: () => forceUpdate(),
   });
 
@@ -90,6 +163,53 @@ export default function NoteEditor({
   }, [doSave]);
 
   useEffect(() => () => void (timer.current && clearTimeout(timer.current)), []);
+
+  // Filter slash items by the typed query.
+  const filtered = useMemo(() => {
+    if (!slash) return SLASH_ITEMS;
+    const q = slash.query.toLowerCase();
+    if (!q) return SLASH_ITEMS;
+    return SLASH_ITEMS.filter(
+      (i) => i.title.toLowerCase().includes(q) || i.keywords.includes(q),
+    );
+  }, [slash]);
+
+  const runSlash = useCallback(
+    (item: SlashItem) => {
+      if (!editor || !slash) return;
+      editor.chain().focus().deleteRange(slash.range).run();
+      item.run(editor);
+      setSlash(null);
+    },
+    [editor, slash],
+  );
+
+  // Keyboard navigation for the slash menu (capture phase, beats ProseMirror).
+  useEffect(() => {
+    if (!slash) return;
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === "ArrowDown") {
+        ev.preventDefault();
+        ev.stopPropagation();
+        setSlashIndex((i) => Math.min(i + 1, filtered.length - 1));
+      } else if (ev.key === "ArrowUp") {
+        ev.preventDefault();
+        ev.stopPropagation();
+        setSlashIndex((i) => Math.max(i - 1, 0));
+      } else if (ev.key === "Enter") {
+        if (filtered[slashIndex]) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          runSlash(filtered[slashIndex]);
+        }
+      } else if (ev.key === "Escape") {
+        ev.preventDefault();
+        setSlash(null);
+      }
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => document.removeEventListener("keydown", onKey, true);
+  }, [slash, slashIndex, filtered, runSlash]);
 
   const applyTemplate = (t: TemplateData) => {
     if (!editor) return;
@@ -127,14 +247,12 @@ export default function NoteEditor({
   };
 
   const words = editor?.storage.characterCount?.words() ?? 0;
-  const isEmpty = editor?.isEmpty ?? true;
-  const showStarter = !note && isEmpty && !title;
 
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
         {/* Header */}
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <Link
             href="/notebook"
             className="inline-flex items-center gap-1.5 text-[13px] font-medium text-muted hover:text-ink"
@@ -212,36 +330,111 @@ export default function NoteEditor({
             scheduleSave();
           }}
           placeholder="Untitled"
-          className="mb-3 w-full bg-transparent text-[32px] font-bold leading-tight tracking-tight outline-none placeholder:text-faint/60"
+          className="mb-2 w-full bg-transparent text-[32px] font-bold leading-tight tracking-tight outline-none placeholder:text-faint/60"
         />
 
-        {/* Starter template chooser (only on a fresh blank page) */}
-        {showStarter && templates.length > 0 && (
-          <div className="mb-4 flex flex-wrap items-center gap-2">
-            <span className="text-[12px] text-faint">Start from:</span>
-            {templates.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => applyTemplate(t)}
-                className="rounded-full border border-line px-3 py-1 text-[12.5px] text-ink-soft hover:border-accent/50 hover:text-accent"
-              >
-                {t.name}
-              </button>
-            ))}
+        {/* Bubble menu — only appears when text is selected */}
+        {editor && (
+          <BubbleMenu
+            editor={editor}
+            className="flex items-center gap-0.5 rounded-lg border border-line bg-surface p-1 shadow-lg shadow-black/10"
+          >
+            <BubbleBtn editor={editor} active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}>
+              <span className="font-bold">B</span>
+            </BubbleBtn>
+            <BubbleBtn editor={editor} active={editor.isActive("italic")} onClick={() => editor.chain().focus().toggleItalic().run()}>
+              <span className="italic">I</span>
+            </BubbleBtn>
+            <BubbleBtn editor={editor} active={editor.isActive("underline")} onClick={() => editor.chain().focus().toggleUnderline().run()}>
+              <span className="underline">U</span>
+            </BubbleBtn>
+            <BubbleBtn editor={editor} active={editor.isActive("strike")} onClick={() => editor.chain().focus().toggleStrike().run()}>
+              <span className="line-through">S</span>
+            </BubbleBtn>
+            <BubbleBtn editor={editor} active={editor.isActive("code")} onClick={() => editor.chain().focus().toggleCode().run()}>
+              <span className="font-mono text-[12px]">{"<>"}</span>
+            </BubbleBtn>
+            <BubbleBtn
+              editor={editor}
+              active={editor.isActive("link")}
+              onClick={() => {
+                const prev = editor.getAttributes("link").href as string | undefined;
+                const url = window.prompt("Link URL", prev ?? "https://");
+                if (url === null) return;
+                if (url === "") editor.chain().focus().extendMarkRange("link").unsetLink().run();
+                else editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+              }}
+            >
+              <LinkIcon size={15} />
+            </BubbleBtn>
+          </BubbleMenu>
+        )}
+
+        {/* Editor body */}
+        <EditorContent editor={editor} />
+
+        {/* Slash command popup */}
+        {slash && (
+          <div
+            className="fixed z-30 max-h-72 w-72 overflow-y-auto rounded-xl border border-line bg-surface p-1.5 shadow-xl shadow-black/10"
+            style={{ top: slash.top, left: slash.left }}
+          >
+            <div className="kicker px-2 py-1">Basic blocks</div>
+            {filtered.length === 0 ? (
+              <p className="px-2 py-2 text-[12px] text-faint">No matching blocks</p>
+            ) : (
+              filtered.map((item, i) => (
+                <button
+                  key={item.title}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onMouseEnter={() => setSlashIndex(i)}
+                  onClick={() => runSlash(item)}
+                  className={`flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left ${
+                    i === slashIndex ? "bg-accent-bg" : "hover:bg-black/[0.03]"
+                  }`}
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-line text-ink-soft">
+                    {item.icon}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-[13px] font-medium text-ink">{item.title}</span>
+                    <span className="block truncate text-[11.5px] text-faint">{item.desc}</span>
+                  </span>
+                </button>
+              ))
+            )}
           </div>
         )}
 
-        {/* Toolbar + editor */}
-        {editor && <EditorToolbar editor={editor} />}
-        <div className="mt-3" onClick={() => editor?.chain().focus().run()}>
-          <EditorContent editor={editor} />
-        </div>
-
-        <div className="mt-6 border-t border-line pt-3 text-[11.5px] text-faint">
-          {words} {words === 1 ? "word" : "words"}
-          {note && " · saved to this day"}
+        <div className="mt-8 border-t border-line pt-3 text-[11.5px] text-faint">
+          {words} {words === 1 ? "word" : "words"} · type{" "}
+          <kbd className="rounded border border-line px-1 font-mono">/</kbd> for blocks
         </div>
       </div>
     </div>
+  );
+}
+
+function BubbleBtn({
+  active,
+  onClick,
+  children,
+}: {
+  editor: Editor;
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={onClick}
+      className={`flex h-8 min-w-8 items-center justify-center rounded-md px-1.5 text-[13px] transition-colors ${
+        active ? "bg-accent-bg text-accent" : "text-ink-soft hover:bg-black/[0.06]"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
