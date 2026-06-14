@@ -44,7 +44,7 @@ function NavLink({
 }: {
   href: string;
   label: string;
-  Icon: (p: { size?: number }) => React.ReactNode;
+  Icon: (p: { size?: number; strokeWidth?: number }) => React.ReactNode;
   active: boolean;
   onNavigate: () => void;
 }) {
@@ -58,8 +58,8 @@ function NavLink({
           : "text-ink hover:bg-black/[0.04]"
       }`}
     >
-      <span className={active ? "text-white" : "text-faint"}>
-        <Icon size={18} />
+      <span className={active ? "text-white" : "text-ink"}>
+        <Icon size={18} strokeWidth={2.2} />
       </span>
       {label}
     </Link>
