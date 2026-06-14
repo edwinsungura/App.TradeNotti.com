@@ -196,7 +196,7 @@ export default function PerformanceCalendar({
 
       {openDate && (
         <DayTradesModal
-          dateLabel={dayLabel(openDate)}
+          title={dayLabel(openDate)}
           totalPnl={dayTotal}
           trades={dayTrades}
           loading={dayLoading}

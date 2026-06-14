@@ -1,11 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import type { AnalyticsData, CalendarData, Range } from "@/lib/analytics";
+import type {
+  AnalyticsData,
+  CalendarData,
+  DayTrade,
+  Range,
+} from "@/lib/analytics";
 import { formatMoney, formatR } from "@/lib/format";
 import EquityCurve from "./EquityCurve";
 import WinLossDonut from "./WinLossDonut";
 import PerformanceCalendar from "./PerformanceCalendar";
+import DayTradesModal from "./DayTradesModal";
+import { ArrowRightIcon } from "../icons";
 
 const RANGES: { id: Range; label: string }[] = [
   { id: "week", label: "Week" },
@@ -66,6 +73,31 @@ export default function AnalyticsView({
   const [data, setData] = useState<AnalyticsData>(initial);
   const [range, setRange] = useState<Range>(initial.range);
   const [loading, setLoading] = useState(false);
+
+  // Setup-detail modal (trades carrying a given tag in the current range).
+  const [openSetup, setOpenSetup] = useState<string | null>(null);
+  const [setupTrades, setSetupTrades] = useState<DayTrade[]>([]);
+  const [setupTotal, setSetupTotal] = useState(0);
+  const [setupLoading, setSetupLoading] = useState(false);
+
+  const showSetup = async (name: string) => {
+    setOpenSetup(name);
+    setSetupLoading(true);
+    setSetupTrades([]);
+    try {
+      const res = await fetch(
+        `/api/analytics/setup?tag=${encodeURIComponent(name)}&range=${range}&accountId=${accountId}`,
+        { cache: "no-store" },
+      );
+      if (res.ok) {
+        const json = await res.json();
+        setSetupTrades(json.trades);
+        setSetupTotal(json.totalPnl);
+      }
+    } finally {
+      setSetupLoading(false);
+    }
+  };
 
   const changeRange = async (next: Range) => {
     if (next === range) return;
@@ -200,30 +232,37 @@ export default function AnalyticsView({
               No tagged trades in this period yet.
             </p>
           ) : (
-            <ul className="flex flex-col">
+            <ul className="-mx-2 flex flex-col">
               {data.setups.map((s) => (
-                <li
-                  key={s.name}
-                  className="flex items-center justify-between gap-4 border-b border-line/60 py-3 last:border-0"
-                >
-                  <span className="min-w-0 truncate text-[14px] font-medium">
-                    {s.name}
-                    {s.symbol && (
-                      <span className="font-normal text-muted"> · {s.symbol}</span>
-                    )}
-                  </span>
-                  <span className="flex shrink-0 items-center gap-5">
-                    <span className="text-[12px] text-faint">
-                      {Math.round(s.winRate)}% wr · {s.wins}/{s.count}
+                <li key={s.name} className="border-b border-line/60 last:border-0">
+                  <button
+                    type="button"
+                    onClick={() => showSetup(s.name)}
+                    className="group flex w-full items-center justify-between gap-4 rounded-lg px-2 py-3 text-left transition-colors hover:bg-black/[0.025]"
+                  >
+                    <span className="flex min-w-0 items-center gap-1.5 truncate text-[14px] font-medium">
+                      {s.name}
+                      {s.symbol && (
+                        <span className="font-normal text-muted"> · {s.symbol}</span>
+                      )}
+                      <ArrowRightIcon
+                        size={13}
+                        className="shrink-0 text-faint opacity-0 transition-opacity group-hover:opacity-100"
+                      />
                     </span>
-                    <span
-                      className={`num w-24 text-right text-[13.5px] font-semibold ${
-                        s.pnl >= 0 ? "text-profit" : "text-loss"
-                      }`}
-                    >
-                      {formatMoney(s.pnl)}
+                    <span className="flex shrink-0 items-center gap-5">
+                      <span className="text-[12px] text-faint">
+                        {Math.round(s.winRate)}% wr · {s.wins}/{s.count}
+                      </span>
+                      <span
+                        className={`num w-24 text-right text-[13.5px] font-semibold ${
+                          s.pnl >= 0 ? "text-profit" : "text-loss"
+                        }`}
+                      >
+                        {formatMoney(s.pnl)}
+                      </span>
                     </span>
-                  </span>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -232,6 +271,16 @@ export default function AnalyticsView({
 
         <PerformanceCalendar initial={initialCalendar} accountId={accountId} />
       </div>
+
+      {openSetup && (
+        <DayTradesModal
+          title={openSetup}
+          totalPnl={setupTotal}
+          trades={setupTrades}
+          loading={setupLoading}
+          onClose={() => setOpenSetup(null)}
+        />
+      )}
     </div>
   );
 }

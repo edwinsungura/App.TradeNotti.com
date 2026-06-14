@@ -307,27 +307,14 @@ export interface DayTrade {
   screenshots: { before: string | null; after: string | null };
 }
 
-/** Closed trades whose exit falls on the given UTC day (yyyy-mm-dd). */
-export async function getDayTrades(
-  accountId: string,
-  dateStr: string,
-): Promise<{ date: string; totalPnl: number; trades: DayTrade[] }> {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const start = new Date(Date.UTC(y, m - 1, d));
-  const end = new Date(start.getTime() + 864e5);
+type DayTradeRow = Prisma.TradeGetPayload<{
+  include: { tags: { include: { tag: true } }; screenshots: true };
+}>;
 
-  const rows = await prisma.trade.findMany({
-    where: { accountId, status: "CLOSED", closedAt: { gte: start, lt: end } },
-    include: { tags: { include: { tag: true } }, screenshots: true },
-    orderBy: { closedAt: "asc" },
-  });
-
-  const shot = (
-    screenshots: { kind: ScreenshotKind; dataUrl: string }[],
-    kind: ScreenshotKind,
-  ) => screenshots.find((s) => s.kind === kind)?.dataUrl ?? null;
-
-  const trades: DayTrade[] = rows.map((t) => ({
+function mapDayTrade(t: DayTradeRow): DayTrade {
+  const shot = (kind: ScreenshotKind) =>
+    t.screenshots.find((s) => s.kind === kind)?.dataUrl ?? null;
+  return {
     id: t.id,
     symbol: t.symbol,
     direction: t.direction,
@@ -345,14 +332,55 @@ export async function getDayTrades(
     phaseOfMarket: t.phaseOfMarket,
     stopLossNote: t.stopLossNote,
     tags: t.tags.map((x) => x.tag.name),
-    screenshots: {
-      before: shot(t.screenshots, "BEFORE"),
-      after: shot(t.screenshots, "AFTER"),
-    },
-  }));
+    screenshots: { before: shot("BEFORE"), after: shot("AFTER") },
+  };
+}
 
+/** Closed trades whose exit falls on the given UTC day (yyyy-mm-dd). */
+export async function getDayTrades(
+  accountId: string,
+  dateStr: string,
+): Promise<{ date: string; totalPnl: number; trades: DayTrade[] }> {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const start = new Date(Date.UTC(y, m - 1, d));
+  const end = new Date(start.getTime() + 864e5);
+
+  const rows = await prisma.trade.findMany({
+    where: { accountId, status: "CLOSED", closedAt: { gte: start, lt: end } },
+    include: { tags: { include: { tag: true } }, screenshots: true },
+    orderBy: { closedAt: "asc" },
+  });
+
+  const trades = rows.map(mapDayTrade);
   const totalPnl = trades.reduce((s, t) => s + (t.pnl ?? 0), 0);
   return { date: dateStr, totalPnl, trades };
+}
+
+/** Closed trades carrying a given tag ("setup"), within the selected range. */
+export async function getSetupTrades(
+  accountId: string,
+  tag: string,
+  range: Range,
+): Promise<{ tag: string; totalPnl: number; trades: DayTrade[] }> {
+  const { current } = resolveWindows(range, new Date());
+  const closedAt = current.start
+    ? { gte: current.start, lte: current.end }
+    : { lte: current.end };
+
+  const rows = await prisma.trade.findMany({
+    where: {
+      accountId,
+      status: "CLOSED",
+      closedAt,
+      tags: { some: { tag: { name: tag } } },
+    },
+    include: { tags: { include: { tag: true } }, screenshots: true },
+    orderBy: { closedAt: "desc" },
+  });
+
+  const trades = rows.map(mapDayTrade);
+  const totalPnl = trades.reduce((s, t) => s + (t.pnl ?? 0), 0);
+  return { tag, totalPnl, trades };
 }
 
 function ymd(d: Date): string {

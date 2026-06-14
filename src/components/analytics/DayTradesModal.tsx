@@ -130,13 +130,13 @@ function TradeBlock({ t }: { t: DayTrade }) {
 }
 
 export default function DayTradesModal({
-  dateLabel,
+  title,
   totalPnl,
   trades,
   loading,
   onClose,
 }: {
-  dateLabel: string;
+  title: string;
   totalPnl: number;
   trades: DayTrade[];
   loading: boolean;
@@ -155,7 +155,7 @@ export default function DayTradesModal({
       <div className="relative flex max-h-[88vh] w-full flex-col rounded-t-2xl border border-line bg-surface shadow-xl sm:max-w-xl sm:rounded-2xl">
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
           <div>
-            <div className="kicker mb-0.5">{dateLabel}</div>
+            <div className="kicker mb-0.5">{title}</div>
             <h2 className="text-[15px] font-semibold">
               {trades.length} {trades.length === 1 ? "trade" : "trades"}
               {!loading && (
