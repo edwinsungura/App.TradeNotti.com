@@ -34,7 +34,7 @@ function GradePill({ grade }: { grade: TradeView["grade"] }) {
   const high = grade === "HIGH_PROBABILITY";
   return (
     <span
-      className={`inline-flex rounded-md px-2 py-1 text-[11.5px] font-medium ${
+      className={`inline-flex whitespace-nowrap rounded-md px-2 py-1 text-[11.5px] font-medium ${
         high
           ? "bg-grade-high-bg text-grade-high"
           : "bg-grade-low-bg text-grade-low"
