@@ -17,6 +17,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import TextAlign from "@tiptap/extension-text-align";
+import Image from "@tiptap/extension-image";
 import { CharacterCount } from "@tiptap/extensions";
 import type { NoteData, TemplateData } from "@/lib/notebook";
 import {
@@ -32,7 +33,32 @@ import {
   CodeBlockIcon,
   MinusIcon,
   LinkIcon,
+  ImageIcon,
 } from "../icons";
+
+// Downscale + compress an image File to a JPEG data URL so it can be embedded
+// in the note content (kept self-contained, like trade screenshots).
+async function compressImage(file: File, max = 1280, quality = 0.82): Promise<string> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new window.Image();
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      i.src = url;
+    });
+    const scale = Math.min(1, max / Math.max(img.width, img.height));
+    const w = Math.round(img.width * scale);
+    const h = Math.round(img.height * scale);
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+    return canvas.toDataURL("image/jpeg", quality);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
 
 type Status = "idle" | "saving" | "saved";
 
@@ -52,7 +78,8 @@ interface SlashItem {
   desc: string;
   keywords: string;
   icon: React.ReactNode;
-  run: (e: Editor) => void;
+  run?: (e: Editor) => void;
+  image?: boolean; // opens the file picker instead of running a command
 }
 
 const HLabel = (n: number) => <span className="text-[13px] font-bold">H{n}</span>;
@@ -67,6 +94,7 @@ const SLASH_ITEMS: SlashItem[] = [
   { title: "To-do list", desc: "Checkbox tasks", keywords: "todo task checkbox check", icon: <ChecklistIcon size={16} />, run: (e) => e.chain().focus().toggleTaskList().run() },
   { title: "Quote", desc: "Capture a quote", keywords: "quote blockquote", icon: <QuoteIcon size={16} />, run: (e) => e.chain().focus().toggleBlockquote().run() },
   { title: "Code block", desc: "Code with syntax", keywords: "code block pre", icon: <CodeBlockIcon size={16} />, run: (e) => e.chain().focus().toggleCodeBlock().run() },
+  { title: "Image", desc: "Upload or paste a picture", keywords: "image picture photo upload", icon: <ImageIcon size={16} />, image: true },
   { title: "Divider", desc: "Horizontal rule", keywords: "divider rule hr line separator", icon: <MinusIcon size={16} />, run: (e) => e.chain().focus().setHorizontalRule().run() },
 ];
 
@@ -99,6 +127,21 @@ export default function NoteEditor({
   const titleRef = useRef(title);
   titleRef.current = title;
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const editorRef = useRef<Editor | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  // Compress and insert an image (optionally at a document position).
+  const insertImage = useCallback(async (file: File, pos?: number) => {
+    if (!file.type.startsWith("image/")) return;
+    const editor = editorRef.current;
+    if (!editor) return;
+    const src = await compressImage(file);
+    if (pos != null) {
+      editor.chain().focus().insertContentAt(pos, { type: "image", attrs: { src } }).run();
+    } else {
+      editor.chain().focus().setImage({ src }).run();
+    }
+  }, []);
 
   // Detect a "/" trigger at the cursor and open the block menu beside it.
   const detectSlash = useCallback((e: Editor) => {
@@ -128,10 +171,37 @@ export default function NoteEditor({
       TaskList,
       TaskItem.configure({ nested: true }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
+      Image.configure({ allowBase64: true }),
       CharacterCount,
     ],
     content: (note?.content as object) ?? "",
-    editorProps: { attributes: { class: "tiptap-content" } },
+    editorProps: {
+      attributes: { class: "tiptap-content" },
+      // Paste an image straight from the clipboard.
+      handlePaste: (_view, event) => {
+        const files = Array.from(event.clipboardData?.files ?? []).filter((f) =>
+          f.type.startsWith("image/"),
+        );
+        if (files.length === 0) return false;
+        event.preventDefault();
+        files.forEach((f) => insertImage(f));
+        return true;
+      },
+      // Drag-and-drop image files onto the page.
+      handleDrop: (view, event) => {
+        const files = Array.from(
+          (event as DragEvent).dataTransfer?.files ?? [],
+        ).filter((f) => f.type.startsWith("image/"));
+        if (files.length === 0) return false;
+        event.preventDefault();
+        const pos = view.posAtCoords({
+          left: (event as DragEvent).clientX,
+          top: (event as DragEvent).clientY,
+        })?.pos;
+        files.forEach((f) => insertImage(f, pos));
+        return true;
+      },
+    },
     onUpdate: ({ editor }) => {
       scheduleSave();
       detectSlash(editor);
@@ -139,6 +209,7 @@ export default function NoteEditor({
     onSelectionUpdate: ({ editor }) => detectSlash(editor),
     onTransaction: () => forceUpdate(),
   });
+  editorRef.current = editor;
 
   const doSave = useCallback(async () => {
     if (!editor) return;
@@ -178,8 +249,9 @@ export default function NoteEditor({
     (item: SlashItem) => {
       if (!editor || !slash) return;
       editor.chain().focus().deleteRange(slash.range).run();
-      item.run(editor);
       setSlash(null);
+      if (item.image) imageInputRef.current?.click();
+      else item.run?.(editor);
     },
     [editor, slash],
   );
@@ -373,6 +445,19 @@ export default function NoteEditor({
         {/* Editor body */}
         <EditorContent editor={editor} />
 
+        {/* Hidden picker for the "/image" command */}
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            Array.from(e.target.files ?? []).forEach((f) => insertImage(f));
+            e.target.value = "";
+          }}
+        />
+
         {/* Slash command popup */}
         {slash && (
           <div
@@ -409,6 +494,7 @@ export default function NoteEditor({
         <div className="mt-8 border-t border-line pt-3 text-[11.5px] text-faint">
           {words} {words === 1 ? "word" : "words"} · type{" "}
           <kbd className="rounded border border-line px-1 font-mono">/</kbd> for blocks
+          {" "}· paste or drop images anywhere
         </div>
       </div>
     </div>

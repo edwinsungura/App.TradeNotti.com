@@ -233,6 +233,14 @@ export const TemplateIcon = (p: IconProps) => (
   </Base>
 );
 
+export const ImageIcon = (p: IconProps) => (
+  <Base {...p}>
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    <circle cx="8.5" cy="8.5" r="1.5" />
+    <path d="M21 15l-5-5L5 21" />
+  </Base>
+);
+
 export const TrashIcon = (p: IconProps) => (
   <Base {...p}>
     <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
