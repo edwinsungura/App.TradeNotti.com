@@ -108,16 +108,15 @@ interface SlashState {
 }
 
 export default function NoteEditor({
-  date,
   note,
   templates: initialTemplates,
 }: {
-  date: string;
-  note: NoteData | null;
+  note: NoteData;
   templates: TemplateData[];
 }) {
   const router = useRouter();
-  const [title, setTitle] = useState(note?.title ?? "");
+  const date = note.date;
+  const [title, setTitle] = useState(note.title ?? "");
   const [status, setStatus] = useState<Status>("idle");
   const [templates, setTemplates] = useState<TemplateData[]>(initialTemplates);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -177,7 +176,7 @@ export default function NoteEditor({
       Image.configure({ allowBase64: true }),
       CharacterCount,
     ],
-    content: (note?.content as object) ?? "",
+    content: (note.content as object) ?? "",
     editorProps: {
       attributes: { class: "tiptap-content" },
       // Space opens the zoom viewer when an image node is selected.
@@ -237,7 +236,7 @@ export default function NoteEditor({
     if (!editor) return;
     setStatus("saving");
     try {
-      const res = await fetch(`/api/notebook/notes/${date}`, {
+      const res = await fetch(`/api/notebook/notes/${note.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: titleRef.current, content: editor.getJSON() }),
@@ -247,7 +246,7 @@ export default function NoteEditor({
     } catch {
       setStatus("idle");
     }
-  }, [editor, date]);
+  }, [editor, note.id]);
 
   const scheduleSave = useCallback(() => {
     setStatus("saving");
@@ -336,8 +335,8 @@ export default function NoteEditor({
   const deletePage = async () => {
     if (timer.current) clearTimeout(timer.current);
     if (!window.confirm("Delete this page? This can't be undone.")) return;
-    await fetch(`/api/notebook/notes/${date}`, { method: "DELETE" });
-    router.push("/notebook");
+    await fetch(`/api/notebook/notes/${note.id}`, { method: "DELETE" });
+    router.push(`/notebook/${date}`);
   };
 
   const words = editor?.storage.characterCount?.words() ?? 0;
@@ -348,7 +347,7 @@ export default function NoteEditor({
         {/* Header */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <Link
-            href="/notebook"
+            href={`/notebook/${date}`}
             className="inline-flex items-center gap-1.5 text-[13px] font-medium text-muted hover:text-ink"
           >
             <ArrowLeftIcon size={15} /> {dayLabel(date)}

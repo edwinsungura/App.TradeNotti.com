@@ -1,31 +1,36 @@
 import { notFound } from "next/navigation";
 import TopBar from "@/components/TopBar";
-import DayView from "@/components/notebook/DayView";
+import NoteEditor from "@/components/notebook/NoteEditor";
 import {
   getAccountsForCurrentUser,
   getActiveAccount,
   getCurrentUser,
 } from "@/lib/account";
-import { getNotesForDate, isValidDate } from "@/lib/notebook";
+import { getNoteById, listTemplates } from "@/lib/notebook";
 
 export const dynamic = "force-dynamic";
 
-export default async function NotebookDayPage({
+export default async function NotePage({
   params,
 }: {
-  params: Promise<{ date: string }>;
+  params: Promise<{ date: string; id: string }>;
 }) {
-  const { date } = await params;
-  if (!isValidDate(date)) notFound();
+  const { id } = await params;
 
   const [user, accounts, account] = await Promise.all([
     getCurrentUser(),
     getAccountsForCurrentUser(),
     getActiveAccount(),
   ]);
+  if (!user) notFound();
 
-  const notes = user ? await getNotesForDate(user.id, date) : [];
-  const initial = (user?.name ?? "T").charAt(0).toUpperCase();
+  const [note, templates] = await Promise.all([
+    getNoteById(user.id, id),
+    listTemplates(user.id),
+  ]);
+  if (!note) notFound();
+
+  const initial = (user.name ?? "T").charAt(0).toUpperCase();
 
   return (
     <>
@@ -40,7 +45,7 @@ export default async function NotebookDayPage({
         activeId={account?.id ?? ""}
         userInitial={initial}
       />
-      <DayView date={date} notes={notes} />
+      <NoteEditor note={note} templates={templates} />
     </>
   );
 }

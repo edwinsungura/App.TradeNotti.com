@@ -27,7 +27,7 @@ model User {
   noteTemplates NoteTemplate[]
 }
 
-// A Notion-style page attached to a calendar day (one page per day per user).
+// A Notion-style page attached to a calendar day (multiple pages per day allowed).
 model Note {
   id        String   @id @default(cuid())
   userId    String
@@ -38,8 +38,8 @@ model Note {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([userId, date])
   @@index([userId])
+  @@index([userId, date])
 }
 
 // A reusable page template the user saves and applies to new notes.

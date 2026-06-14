@@ -19,6 +19,16 @@ function monthLabel(year: number, month: number): string {
     .toUpperCase();
 }
 
+function groupByDate(list: MonthNote[]): Map<string, MonthNote[]> {
+  const map = new Map<string, MonthNote[]>();
+  for (const n of list) {
+    const arr = map.get(n.date) ?? [];
+    arr.push(n);
+    map.set(n.date, arr);
+  }
+  return map;
+}
+
 export default function NotebookCalendar({
   initialYear,
   initialMonth,
@@ -31,8 +41,8 @@ export default function NotebookCalendar({
   const router = useRouter();
   const [year, setYear] = useState(initialYear);
   const [month, setMonth] = useState(initialMonth);
-  const [notes, setNotes] = useState<Map<string, string>>(
-    () => new Map(initialNotes.map((n) => [n.date, n.title])),
+  const [notes, setNotes] = useState<Map<string, MonthNote[]>>(
+    () => groupByDate(initialNotes),
   );
   const [loading, setLoading] = useState(false);
 
@@ -46,7 +56,7 @@ export default function NotebookCalendar({
       const res = await fetch(`/api/notebook/notes?month=${ym}`, { cache: "no-store" });
       if (res.ok) {
         const json = await res.json();
-        setNotes(new Map((json.notes as MonthNote[]).map((n) => [n.date, n.title])));
+        setNotes(groupByDate(json.notes as MonthNote[]));
       }
     } finally {
       setLoading(false);
@@ -149,7 +159,7 @@ export default function NotebookCalendar({
                 {week.map((d) => {
                   const key = ymd(d);
                   const inMonth = d.getUTCMonth() === month;
-                  const title = notes.get(key);
+                  const dayNotes = notes.get(key) ?? [];
                   const isToday = key === todayKey;
                   return (
                     <button
@@ -178,9 +188,21 @@ export default function NotebookCalendar({
                         </span>
                       </div>
 
-                      {title !== undefined && (
-                        <span className="mt-1.5 line-clamp-3 rounded-md bg-accent-bg px-2 py-1 text-[12px] font-medium text-accent">
-                          {title || "Untitled"}
+                      {dayNotes.length > 0 && (
+                        <span className="mt-1.5 flex flex-col gap-1">
+                          {dayNotes.slice(0, 2).map((n) => (
+                            <span
+                              key={n.id}
+                              className="truncate rounded-md bg-accent-bg px-2 py-1 text-[12px] font-medium text-accent"
+                            >
+                              {n.title || "Untitled"}
+                            </span>
+                          ))}
+                          {dayNotes.length > 2 && (
+                            <span className="px-1 text-[11px] font-medium text-faint">
+                              +{dayNotes.length - 2} more
+                            </span>
+                          )}
                         </span>
                       )}
                     </button>

@@ -9,6 +9,13 @@ export interface NoteData {
   updatedAt: string;
 }
 
+export interface NoteSummary {
+  id: string;
+  date: string;
+  title: string;
+  updatedAt: string;
+}
+
 export interface TemplateData {
   id: string;
   name: string;
@@ -19,77 +26,115 @@ export interface TemplateData {
 const VALID_DATE = /^\d{4}-\d{2}-\d{2}$/;
 export const isValidDate = (d: string) => VALID_DATE.test(d);
 
-/** The single note attached to a given calendar day (or null). */
-export async function getNote(
-  userId: string,
-  date: string,
-): Promise<NoteData | null> {
-  const note = await prisma.note.findUnique({
-    where: { userId_date: { userId, date } },
-  });
-  if (!note) return null;
+function toNoteData(n: {
+  id: string;
+  date: string;
+  title: string;
+  content: Prisma.JsonValue | null;
+  updatedAt: Date;
+}): NoteData {
   return {
-    id: note.id,
-    date: note.date,
-    title: note.title,
-    content: note.content,
-    updatedAt: note.updatedAt.toISOString(),
+    id: n.id,
+    date: n.date,
+    title: n.title,
+    content: n.content,
+    updatedAt: n.updatedAt.toISOString(),
   };
 }
 
-/** Create or update a day's note. */
-export async function upsertNote(
+/** A single note by id (scoped to the user). */
+export async function getNoteById(
+  userId: string,
+  id: string,
+): Promise<NoteData | null> {
+  const note = await prisma.note.findFirst({ where: { id, userId } });
+  return note ? toNoteData(note) : null;
+}
+
+/** All pages on a given day, newest first. */
+export async function getNotesForDate(
   userId: string,
   date: string,
-  data: { title?: string; content?: Prisma.InputJsonValue | null },
+): Promise<NoteSummary[]> {
+  const rows = await prisma.note.findMany({
+    where: { userId, date },
+    orderBy: { createdAt: "asc" },
+    select: { id: true, date: true, title: true, updatedAt: true },
+  });
+  return rows.map((n) => ({
+    id: n.id,
+    date: n.date,
+    title: n.title,
+    updatedAt: n.updatedAt.toISOString(),
+  }));
+}
+
+/** Create a new page on a day. */
+export async function createNote(
+  userId: string,
+  date: string,
+  data: { title?: string; content?: Prisma.InputJsonValue },
 ): Promise<NoteData> {
+  const note = await prisma.note.create({
+    data: {
+      userId,
+      date,
+      title: data.title ?? "",
+      ...(data.content !== undefined ? { content: data.content } : {}),
+    },
+  });
+  return toNoteData(note);
+}
+
+/** Update an existing page by id. */
+export async function updateNote(
+  userId: string,
+  id: string,
+  data: { title?: string; content?: Prisma.InputJsonValue | null },
+): Promise<NoteData | null> {
+  const existing = await prisma.note.findFirst({
+    where: { id, userId },
+    select: { id: true },
+  });
+  if (!existing) return null;
+
   const content =
     data.content === null
       ? Prisma.JsonNull
       : (data.content as Prisma.InputJsonValue | undefined);
 
-  const note = await prisma.note.upsert({
-    where: { userId_date: { userId, date } },
-    create: {
-      userId,
-      date,
-      title: data.title ?? "",
-      ...(content !== undefined ? { content } : {}),
-    },
-    update: {
+  const note = await prisma.note.update({
+    where: { id },
+    data: {
       ...(data.title !== undefined ? { title: data.title } : {}),
       ...(content !== undefined ? { content } : {}),
     },
   });
-  return {
-    id: note.id,
-    date: note.date,
-    title: note.title,
-    content: note.content,
-    updatedAt: note.updatedAt.toISOString(),
-  };
+  return toNoteData(note);
 }
 
-/** Delete a day's note. */
-export async function deleteNote(userId: string, date: string): Promise<void> {
-  await prisma.note.deleteMany({ where: { userId, date } });
+/** Delete a page by id. */
+export async function deleteNote(userId: string, id: string): Promise<void> {
+  await prisma.note.deleteMany({ where: { id, userId } });
 }
 
 export interface MonthNote {
+  id: string;
   date: string;
   title: string;
 }
 
-/** Notes within a month (date + title) for calendar previews. */
+/** Notes within a month (id + date + title) for calendar previews. */
 export async function getMonthNotes(
   userId: string,
   ym: string, // "YYYY-MM"
 ): Promise<MonthNote[]> {
   const notes = await prisma.note.findMany({
     where: { userId, date: { startsWith: `${ym}-` } },
-    select: { date: true, title: true },
+    orderBy: { createdAt: "asc" },
+    select: { id: true, date: true, title: true },
   });
-  return notes.map((n) => ({ date: n.date, title: n.title }));
+  return notes.map((n) => ({ id: n.id, date: n.date, title: n.title }));
 }
 
 export async function listTemplates(userId: string): Promise<TemplateData[]> {
