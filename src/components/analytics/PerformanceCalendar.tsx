@@ -7,9 +7,9 @@ import DayTradesModal from "./DayTradesModal";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-// Match the Win/loss distribution card exactly: green for profit, red for loss.
-const PROFIT_RGB = "22,163,74";
-const LOSS_RGB = "239,68,68";
+// Match the Edge card P&L colours exactly (--color-profit / --color-loss).
+const PROFIT_RGB = "13,157,102"; // #0d9d66
+const LOSS_RGB = "226,59,59"; // #e23b3b
 
 function compactMoney(n: number): string {
   const sign = n > 0 ? "+" : n < 0 ? "-" : "";

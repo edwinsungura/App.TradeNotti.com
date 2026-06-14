@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/account";
-import { getNote, upsertNote, isValidDate } from "@/lib/notebook";
+import { getNote, upsertNote, deleteNote, isValidDate } from "@/lib/notebook";
 
 export const dynamic = "force-dynamic";
 
@@ -42,4 +42,20 @@ export async function PUT(
     content: body.content as never,
   });
   return NextResponse.json({ note });
+}
+
+// DELETE /api/notebook/notes/:date — remove a day's page.
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ date: string }> },
+) {
+  const { date } = await params;
+  if (!isValidDate(date)) {
+    return NextResponse.json({ error: "Invalid date" }, { status: 400 });
+  }
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "No user" }, { status: 404 });
+
+  await deleteNote(user.id, date);
+  return NextResponse.json({ ok: true });
 }

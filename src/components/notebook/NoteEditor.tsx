@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -34,6 +35,7 @@ export default function NoteEditor({
   note: NoteData | null;
   templates: TemplateData[];
 }) {
+  const router = useRouter();
   const [title, setTitle] = useState(note?.title ?? "");
   const [status, setStatus] = useState<Status>("idle");
   const [templates, setTemplates] = useState<TemplateData[]>(initialTemplates);
@@ -117,6 +119,13 @@ export default function NoteEditor({
     setTemplates((prev) => prev.filter((t) => t.id !== id));
   };
 
+  const deletePage = async () => {
+    if (timer.current) clearTimeout(timer.current);
+    if (!window.confirm("Delete this page? This can't be undone.")) return;
+    await fetch(`/api/notebook/notes/${date}`, { method: "DELETE" });
+    router.push("/notebook");
+  };
+
   const words = editor?.storage.characterCount?.words() ?? 0;
   const isEmpty = editor?.isEmpty ?? true;
   const showStarter = !note && isEmpty && !title;
@@ -183,6 +192,15 @@ export default function NoteEditor({
                 </div>
               )}
             </div>
+
+            <button
+              onClick={deletePage}
+              title="Delete page"
+              aria-label="Delete page"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-muted hover:border-loss/40 hover:bg-loss-soft hover:text-loss"
+            >
+              <TrashIcon size={15} />
+            </button>
           </div>
         </div>
 

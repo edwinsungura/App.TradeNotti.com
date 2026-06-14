@@ -70,6 +70,11 @@ export async function upsertNote(
   };
 }
 
+/** Delete a day's note. */
+export async function deleteNote(userId: string, date: string): Promise<void> {
+  await prisma.note.deleteMany({ where: { userId, date } });
+}
+
 export interface MonthNote {
   date: string;
   title: string;
