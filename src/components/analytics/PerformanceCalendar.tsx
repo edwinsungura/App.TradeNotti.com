@@ -7,9 +7,9 @@ import DayTradesModal from "./DayTradesModal";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-// App palette (consistent with --color-profit / --color-loss).
-const PROFIT_RGB = "13,157,102";
-const LOSS_RGB = "226,59,59";
+// Two flat, bright colours — green for profit days, red for loss days.
+const PROFIT_RGB = "34,197,94";
+const LOSS_RGB = "239,68,68";
 
 function compactMoney(n: number): string {
   const sign = n > 0 ? "+" : n < 0 ? "-" : "";
@@ -61,12 +61,6 @@ export default function PerformanceCalendar({
       timeZone: "UTC",
     });
 
-  // Strongest move in the month sets the colour intensity scale.
-  const maxAbs = Math.max(
-    1,
-    ...data.weeks.flat().filter((d) => d.inMonth).map((d) => Math.abs(d.pnl)),
-  );
-
   const go = async (delta: number) => {
     let year = data.year;
     let month = data.month + delta;
@@ -89,15 +83,11 @@ export default function PerformanceCalendar({
     }
   };
 
-  // Brighter, consistent fill: stronger moves get a more saturated colour.
+  // Flat fill: one bright green for any profit day, one bright red for any loss day.
   const cellFill = (pnl: number) => {
-    if (pnl === 0) return { style: undefined, strong: false };
-    const intensity = 0.3 + 0.65 * Math.min(1, Math.abs(pnl) / maxAbs);
+    if (pnl === 0) return { style: undefined, colored: false };
     const rgb = pnl > 0 ? PROFIT_RGB : LOSS_RGB;
-    return {
-      style: { backgroundColor: `rgba(${rgb},${intensity.toFixed(2)})` },
-      strong: intensity > 0.62,
-    };
+    return { style: { backgroundColor: `rgb(${rgb})` }, colored: true };
   };
 
   return (
@@ -160,9 +150,9 @@ export default function PerformanceCalendar({
                     >
                       <span
                         className={`text-[12px] ${
-                          cell.isToday
+                          cell.isToday && !fill.colored
                             ? "font-bold text-accent"
-                            : fill.strong
+                            : fill.colored
                               ? "font-medium text-white/90"
                               : "text-muted"
                         }`}
@@ -171,22 +161,10 @@ export default function PerformanceCalendar({
                       </span>
                       {clickable && (
                         <span className="mt-auto">
-                          <span
-                            className={`block text-[13px] font-semibold ${
-                              fill.strong
-                                ? "text-white"
-                                : cell.pnl >= 0
-                                  ? "text-profit"
-                                  : "text-loss"
-                            }`}
-                          >
+                          <span className="block text-[13px] font-semibold text-white">
                             {compactMoney(cell.pnl)}
                           </span>
-                          <span
-                            className={`block text-[10.5px] ${
-                              fill.strong ? "text-white/80" : "text-faint"
-                            }`}
-                          >
+                          <span className="block text-[10.5px] text-white/80">
                             {cell.trades} {cell.trades === 1 ? "trade" : "trades"}
                           </span>
                         </span>
@@ -202,11 +180,11 @@ export default function PerformanceCalendar({
 
       <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11.5px] text-muted">
         <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded" style={{ backgroundColor: `rgba(${PROFIT_RGB},0.75)` }} />
-          Profit day · darker = larger move
+          <span className="h-3 w-3 rounded" style={{ backgroundColor: `rgb(${PROFIT_RGB})` }} />
+          Profit day
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded" style={{ backgroundColor: `rgba(${LOSS_RGB},0.75)` }} />
+          <span className="h-3 w-3 rounded" style={{ backgroundColor: `rgb(${LOSS_RGB})` }} />
           Loss day
         </span>
         <span className="flex items-center gap-1.5">

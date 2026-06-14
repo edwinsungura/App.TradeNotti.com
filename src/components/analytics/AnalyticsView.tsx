@@ -214,7 +214,7 @@ export default function AnalyticsView({
                   </span>
                   <span className="flex shrink-0 items-center gap-5">
                     <span className="text-[12px] text-faint">
-                      {Math.round(s.winRate)}% wr
+                      {Math.round(s.winRate)}% wr · {s.wins}/{s.count}
                     </span>
                     <span
                       className={`num w-24 text-right text-[13.5px] font-semibold ${

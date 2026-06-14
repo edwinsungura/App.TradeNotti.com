@@ -9,11 +9,13 @@ import type {
 export type Range = "week" | "month" | "ytd" | "all";
 
 export interface SetupStat {
-  name: string;
-  symbol: string | null;
-  winRate: number; // 0–100
-  pnl: number;
-  count: number;
+  name: string; // the tag, treated as a "setup"
+  symbol: string | null; // most-traded instrument for this tag
+  winRate: number; // 0–100  = wins / count
+  wins: number;
+  losses: number;
+  count: number; // closed trades carrying this tag, in range
+  pnl: number; // net P&L across those trades
 }
 
 export interface AnalyticsData {
@@ -201,20 +203,26 @@ export async function getAnalytics(
     equityCurve.push({ t: t.closedAt!.toISOString(), equity: running });
   }
 
-  // --- best & worst setups: group closed-in-range trades by tag. ----------
-  const groups = new Map<
-    string,
-    { pnl: number; wins: number; count: number; symbols: Map<string, number> }
-  >();
+  // --- best & worst setups: group closed-in-range trades by tag, then
+  //     compute each tag's win rate (wins / count) and net P&L. -------------
+  interface Group {
+    pnl: number;
+    wins: number;
+    losses: number;
+    count: number;
+    symbols: Map<string, number>;
+  }
+  const groups = new Map<string, Group>();
   for (const t of windowClosed) {
     const pnl = num(t.pnl) ?? 0;
     for (const { tag } of t.tags) {
-      const g =
+      const g: Group =
         groups.get(tag.name) ??
-        { pnl: 0, wins: 0, count: 0, symbols: new Map<string, number>() };
+        { pnl: 0, wins: 0, losses: 0, count: 0, symbols: new Map() };
       g.pnl += pnl;
-      if (pnl > 0) g.wins++;
       g.count++;
+      if (pnl > 0) g.wins++;
+      else if (pnl < 0) g.losses++;
       g.symbols.set(t.symbol, (g.symbols.get(t.symbol) ?? 0) + 1);
       groups.set(tag.name, g);
     }
@@ -227,8 +235,10 @@ export async function getAnalytics(
         name,
         symbol,
         winRate: g.count ? (g.wins / g.count) * 100 : 0,
-        pnl: g.pnl,
+        wins: g.wins,
+        losses: g.losses,
         count: g.count,
+        pnl: g.pnl,
       };
     })
     .sort((a, b) => b.pnl - a.pnl);
