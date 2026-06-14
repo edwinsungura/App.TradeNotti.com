@@ -1,5 +1,10 @@
 import { prisma } from "./db";
-import type { Prisma } from "@prisma/client";
+import type {
+  Prisma,
+  TradeDirection,
+  TradeGrade,
+  ScreenshotKind,
+} from "@prisma/client";
 
 export type Range = "week" | "month" | "ytd" | "all";
 
@@ -267,6 +272,77 @@ export interface CalendarData {
   month: number; // 0–11
   label: string; // "MAY 2026"
   weeks: CalendarDay[][];
+}
+
+// --- trades for a single calendar day (with journal inputs) ---------------
+
+export interface DayTrade {
+  id: string;
+  symbol: string;
+  direction: TradeDirection;
+  grade: TradeGrade | null;
+  entry: number;
+  stopLoss: number | null;
+  takeProfit: number | null;
+  pnl: number | null;
+  rMultiple: number | null;
+  volume: number | null;
+  openedAt: string;
+  closedAt: string | null;
+  notes: string | null;
+  marketDirection: string | null;
+  phaseOfMarket: string | null;
+  stopLossNote: string | null;
+  tags: string[];
+  screenshots: { before: string | null; after: string | null };
+}
+
+/** Closed trades whose exit falls on the given UTC day (yyyy-mm-dd). */
+export async function getDayTrades(
+  accountId: string,
+  dateStr: string,
+): Promise<{ date: string; totalPnl: number; trades: DayTrade[] }> {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const start = new Date(Date.UTC(y, m - 1, d));
+  const end = new Date(start.getTime() + 864e5);
+
+  const rows = await prisma.trade.findMany({
+    where: { accountId, status: "CLOSED", closedAt: { gte: start, lt: end } },
+    include: { tags: { include: { tag: true } }, screenshots: true },
+    orderBy: { closedAt: "asc" },
+  });
+
+  const shot = (
+    screenshots: { kind: ScreenshotKind; dataUrl: string }[],
+    kind: ScreenshotKind,
+  ) => screenshots.find((s) => s.kind === kind)?.dataUrl ?? null;
+
+  const trades: DayTrade[] = rows.map((t) => ({
+    id: t.id,
+    symbol: t.symbol,
+    direction: t.direction,
+    grade: t.grade,
+    entry: Number(t.entry),
+    stopLoss: num(t.stopLoss),
+    takeProfit: num(t.takeProfit),
+    pnl: num(t.pnl),
+    rMultiple: num(t.rMultiple),
+    volume: num(t.volume),
+    openedAt: t.openedAt.toISOString(),
+    closedAt: t.closedAt ? t.closedAt.toISOString() : null,
+    notes: t.notes,
+    marketDirection: t.marketDirection,
+    phaseOfMarket: t.phaseOfMarket,
+    stopLossNote: t.stopLossNote,
+    tags: t.tags.map((x) => x.tag.name),
+    screenshots: {
+      before: shot(t.screenshots, "BEFORE"),
+      after: shot(t.screenshots, "AFTER"),
+    },
+  }));
+
+  const totalPnl = trades.reduce((s, t) => s + (t.pnl ?? 0), 0);
+  return { date: dateStr, totalPnl, trades };
 }
 
 function ymd(d: Date): string {

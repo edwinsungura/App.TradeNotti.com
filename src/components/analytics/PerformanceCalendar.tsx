@@ -1,10 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import type { CalendarData } from "@/lib/analytics";
+import type { CalendarData, CalendarDay, DayTrade } from "@/lib/analytics";
 import { ChevronIcon } from "../icons";
+import DayTradesModal from "./DayTradesModal";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+// App palette (consistent with --color-profit / --color-loss).
+const PROFIT_RGB = "13,157,102";
+const LOSS_RGB = "226,59,59";
 
 function compactMoney(n: number): string {
   const sign = n > 0 ? "+" : n < 0 ? "-" : "";
@@ -20,6 +25,41 @@ export default function PerformanceCalendar({
 }) {
   const [data, setData] = useState<CalendarData>(initial);
   const [loading, setLoading] = useState(false);
+
+  // Day-detail modal state.
+  const [openDate, setOpenDate] = useState<string | null>(null);
+  const [dayTrades, setDayTrades] = useState<DayTrade[]>([]);
+  const [dayTotal, setDayTotal] = useState(0);
+  const [dayLoading, setDayLoading] = useState(false);
+
+  const openDay = async (cell: CalendarDay) => {
+    if (!cell.inMonth || cell.trades === 0) return;
+    setOpenDate(cell.date);
+    setDayLoading(true);
+    setDayTrades([]);
+    try {
+      const res = await fetch(
+        `/api/analytics/day?date=${cell.date}&accountId=${accountId}`,
+        { cache: "no-store" },
+      );
+      if (res.ok) {
+        const json = await res.json();
+        setDayTrades(json.trades);
+        setDayTotal(json.totalPnl);
+      }
+    } finally {
+      setDayLoading(false);
+    }
+  };
+
+  const dayLabel = (iso: string) =>
+    new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    });
 
   // Strongest move in the month sets the colour intensity scale.
   const maxAbs = Math.max(
@@ -49,11 +89,15 @@ export default function PerformanceCalendar({
     }
   };
 
-  const cellStyle = (pnl: number) => {
-    if (pnl === 0) return undefined;
-    const intensity = 0.12 + 0.55 * Math.min(1, Math.abs(pnl) / maxAbs);
-    const rgb = pnl > 0 ? "22,163,74" : "239,68,68";
-    return { backgroundColor: `rgba(${rgb},${intensity.toFixed(2)})` };
+  // Brighter, consistent fill: stronger moves get a more saturated colour.
+  const cellFill = (pnl: number) => {
+    if (pnl === 0) return { style: undefined, strong: false };
+    const intensity = 0.3 + 0.65 * Math.min(1, Math.abs(pnl) / maxAbs);
+    const rgb = pnl > 0 ? PROFIT_RGB : LOSS_RGB;
+    return {
+      style: { backgroundColor: `rgba(${rgb},${intensity.toFixed(2)})` },
+      strong: intensity > 0.62,
+    };
   };
 
   return (
@@ -96,37 +140,60 @@ export default function PerformanceCalendar({
           <div className="flex flex-col gap-1.5">
             {data.weeks.map((week, wi) => (
               <div key={wi} className="grid grid-cols-7 gap-1.5">
-                {week.map((cell) => (
-                  <div
-                    key={cell.date}
-                    style={cellStyle(cell.inMonth ? cell.pnl : 0)}
-                    className={`flex min-h-[84px] flex-col rounded-lg border p-2 ${
-                      cell.inMonth ? "border-line/70" : "border-transparent opacity-40"
-                    } ${cell.isToday ? "ring-2 ring-accent/50" : ""}`}
-                  >
-                    <span
-                      className={`text-[12px] ${
-                        cell.isToday ? "font-bold text-accent" : "text-muted"
+                {week.map((cell) => {
+                  const fill = cellFill(cell.inMonth ? cell.pnl : 0);
+                  const clickable = cell.inMonth && cell.trades > 0;
+                  return (
+                    <button
+                      key={cell.date}
+                      type="button"
+                      onClick={() => openDay(cell)}
+                      disabled={!clickable}
+                      style={fill.style}
+                      className={`flex min-h-[84px] flex-col rounded-lg border p-2 text-left transition-shadow ${
+                        cell.inMonth ? "border-line/70" : "border-transparent opacity-40"
+                      } ${cell.isToday ? "ring-2 ring-accent/50" : ""} ${
+                        clickable
+                          ? "cursor-pointer hover:shadow-md hover:ring-1 hover:ring-ink/20"
+                          : "cursor-default"
                       }`}
                     >
-                      {cell.day}
-                    </span>
-                    {cell.inMonth && cell.trades > 0 && (
-                      <span className="mt-auto">
-                        <span
-                          className={`block text-[13px] font-semibold ${
-                            cell.pnl >= 0 ? "text-profit" : "text-loss"
-                          }`}
-                        >
-                          {compactMoney(cell.pnl)}
-                        </span>
-                        <span className="block text-[10.5px] text-faint">
-                          {cell.trades} {cell.trades === 1 ? "trade" : "trades"}
-                        </span>
+                      <span
+                        className={`text-[12px] ${
+                          cell.isToday
+                            ? "font-bold text-accent"
+                            : fill.strong
+                              ? "font-medium text-white/90"
+                              : "text-muted"
+                        }`}
+                      >
+                        {cell.day}
                       </span>
-                    )}
-                  </div>
-                ))}
+                      {clickable && (
+                        <span className="mt-auto">
+                          <span
+                            className={`block text-[13px] font-semibold ${
+                              fill.strong
+                                ? "text-white"
+                                : cell.pnl >= 0
+                                  ? "text-profit"
+                                  : "text-loss"
+                            }`}
+                          >
+                            {compactMoney(cell.pnl)}
+                          </span>
+                          <span
+                            className={`block text-[10.5px] ${
+                              fill.strong ? "text-white/80" : "text-faint"
+                            }`}
+                          >
+                            {cell.trades} {cell.trades === 1 ? "trade" : "trades"}
+                          </span>
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             ))}
           </div>
@@ -135,18 +202,29 @@ export default function PerformanceCalendar({
 
       <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11.5px] text-muted">
         <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded" style={{ backgroundColor: "rgba(22,163,74,0.5)" }} />
+          <span className="h-3 w-3 rounded" style={{ backgroundColor: `rgba(${PROFIT_RGB},0.75)` }} />
           Profit day · darker = larger move
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded" style={{ backgroundColor: "rgba(239,68,68,0.5)" }} />
+          <span className="h-3 w-3 rounded" style={{ backgroundColor: `rgba(${LOSS_RGB},0.75)` }} />
           Loss day
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-3 w-3 rounded ring-2 ring-accent/50" />
           Today
         </span>
+        <span className="text-faint">Tap a day to view its trades</span>
       </div>
+
+      {openDate && (
+        <DayTradesModal
+          dateLabel={dayLabel(openDate)}
+          totalPnl={dayTotal}
+          trades={dayTrades}
+          loading={dayLoading}
+          onClose={() => setOpenDate(null)}
+        />
+      )}
     </section>
   );
 }
