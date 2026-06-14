@@ -12,6 +12,7 @@ import {
 } from "react";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
+import { NodeSelection } from "@tiptap/pm/state";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import TaskList from "@tiptap/extension-task-list";
@@ -20,6 +21,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import Image from "@tiptap/extension-image";
 import { CharacterCount } from "@tiptap/extensions";
 import type { NoteData, TemplateData } from "@/lib/notebook";
+import ImageLightbox from "./ImageLightbox";
 import {
   ArrowLeftIcon,
   TemplateIcon,
@@ -123,6 +125,7 @@ export default function NoteEditor({
 
   const [slash, setSlash] = useState<SlashState | null>(null);
   const [slashIndex, setSlashIndex] = useState(0);
+  const [lightbox, setLightbox] = useState<string | null>(null);
 
   const titleRef = useRef(title);
   titleRef.current = title;
@@ -177,6 +180,25 @@ export default function NoteEditor({
     content: (note?.content as object) ?? "",
     editorProps: {
       attributes: { class: "tiptap-content" },
+      // Space opens the zoom viewer when an image node is selected.
+      handleKeyDown: (view, event) => {
+        if (event.key !== " ") return false;
+        const sel = view.state.selection;
+        if (sel instanceof NodeSelection && sel.node.type.name === "image") {
+          event.preventDefault();
+          setLightbox(sel.node.attrs.src as string);
+          return true;
+        }
+        return false;
+      },
+      // Double-click an image to open the zoom viewer.
+      handleDoubleClickOn: (_view, _pos, node) => {
+        if (node.type.name === "image") {
+          setLightbox(node.attrs.src as string);
+          return true;
+        }
+        return false;
+      },
       // Paste an image straight from the clipboard.
       handlePaste: (_view, event) => {
         const files = Array.from(event.clipboardData?.files ?? []).filter((f) =>
@@ -494,9 +516,12 @@ export default function NoteEditor({
         <div className="mt-8 border-t border-line pt-3 text-[11.5px] text-faint">
           {words} {words === 1 ? "word" : "words"} · type{" "}
           <kbd className="rounded border border-line px-1 font-mono">/</kbd> for blocks
-          {" "}· paste or drop images anywhere
+          {" "}· paste or drop images · select an image and press{" "}
+          <kbd className="rounded border border-line px-1 font-mono">space</kbd> to zoom
         </div>
       </div>
+
+      {lightbox && <ImageLightbox src={lightbox} onClose={() => setLightbox(null)} />}
     </div>
   );
 }
