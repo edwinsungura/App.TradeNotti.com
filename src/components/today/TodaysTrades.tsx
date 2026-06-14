@@ -169,7 +169,7 @@ export default function TodaysTrades({
                       )}
                     </span>
                   </td>
-                  <td className="num !pr-0 text-right text-[12px] text-muted">
+                  <td className="num !pr-0 whitespace-nowrap text-right text-[12px] text-muted">
                     {formatTradeTime(t.openedAt)}
                   </td>
                 </tr>
