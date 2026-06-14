@@ -7,8 +7,8 @@ import DayTradesModal from "./DayTradesModal";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-// Two flat, bright colours — green for profit days, red for loss days.
-const PROFIT_RGB = "34,197,94";
+// Match the Win/loss distribution card exactly: green for profit, red for loss.
+const PROFIT_RGB = "22,163,74";
 const LOSS_RGB = "239,68,68";
 
 function compactMoney(n: number): string {
