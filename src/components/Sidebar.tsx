@@ -44,7 +44,7 @@ function NavLink({
 }: {
   href: string;
   label: string;
-  Icon: (p: { size?: number; strokeWidth?: number }) => React.ReactNode;
+  Icon: (p: { size?: number }) => React.ReactNode;
   active: boolean;
   onNavigate: () => void;
 }) {
@@ -52,14 +52,14 @@ function NavLink({
     <Link
       href={href}
       onClick={onNavigate}
-      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
         active
           ? "bg-ink text-white"
-          : "text-ink hover:bg-black/[0.04]"
+          : "text-[#15171c] hover:bg-black/[0.04]"
       }`}
     >
-      <span className={active ? "text-white" : "text-ink"}>
-        <Icon size={18} strokeWidth={2.2} />
+      <span className={active ? "text-white" : "text-[#15171c]"}>
+        <Icon size={18} />
       </span>
       {label}
     </Link>
