@@ -22,7 +22,37 @@ model User {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  accounts  Account[]
+  accounts      Account[]
+  notes         Note[]
+  noteTemplates NoteTemplate[]
+}
+
+// A Notion-style page attached to a calendar day (one page per day per user).
+model Note {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      String   // calendar day, "YYYY-MM-DD"
+  title     String   @default("")
+  content   Json? // TipTap document JSON
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId])
+}
+
+// A reusable page template the user saves and applies to new notes.
+model NoteTemplate {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  content   Json? // TipTap document JSON
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 enum AccountType {

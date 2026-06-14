@@ -53,3 +53,143 @@ body {
   color: var(--color-faint);
   font-weight: 600;
 }
+
+/* ---------------------------------------------------------------------------
+   Notebook editor (TipTap / ProseMirror) — Notion-style page styling
+   ------------------------------------------------------------------------- */
+.tiptap-content {
+  outline: none;
+  min-height: 60vh;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--color-ink-soft);
+}
+
+.tiptap-content > * + * {
+  margin-top: 0.6em;
+}
+
+.tiptap-content h1 {
+  font-size: 1.85rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+  margin-top: 1.4em;
+}
+.tiptap-content h2 {
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-ink);
+  margin-top: 1.2em;
+}
+.tiptap-content h3 {
+  font-size: 1.18rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin-top: 1em;
+}
+
+.tiptap-content ul,
+.tiptap-content ol {
+  padding-left: 1.4em;
+}
+.tiptap-content ul {
+  list-style: disc;
+}
+.tiptap-content ol {
+  list-style: decimal;
+}
+.tiptap-content li {
+  margin: 0.15em 0;
+}
+.tiptap-content li p {
+  margin: 0;
+}
+
+/* Task list (checkboxes) */
+.tiptap-content ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0.2em;
+}
+.tiptap-content ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55em;
+}
+.tiptap-content ul[data-type="taskList"] li > label {
+  margin-top: 0.28em;
+  user-select: none;
+}
+.tiptap-content ul[data-type="taskList"] li > div {
+  flex: 1 1 auto;
+}
+.tiptap-content ul[data-type="taskList"] input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+.tiptap-content ul[data-type="taskList"] li[data-checked="true"] > div {
+  color: var(--color-faint);
+  text-decoration: line-through;
+}
+
+.tiptap-content blockquote {
+  border-left: 3px solid var(--color-line);
+  padding-left: 1em;
+  color: var(--color-muted);
+}
+
+.tiptap-content code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.12em 0.36em;
+  border-radius: 4px;
+}
+.tiptap-content pre {
+  background: #0e0f13;
+  color: #e8e8ea;
+  border-radius: 10px;
+  padding: 0.9em 1.1em;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.tiptap-content pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+
+.tiptap-content hr {
+  border: none;
+  border-top: 1px solid var(--color-line);
+  margin: 1.4em 0;
+}
+
+.tiptap-content a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.tiptap-content strong {
+  color: var(--color-ink);
+  font-weight: 700;
+}
+
+/* Placeholder text on empty nodes */
+.tiptap-content p.is-editor-empty:first-child::before,
+.tiptap-content .is-empty::before {
+  content: attr(data-placeholder);
+  color: var(--color-faint);
+  opacity: 0.7;
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

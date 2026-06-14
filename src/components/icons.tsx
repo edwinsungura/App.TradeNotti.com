@@ -146,6 +146,99 @@ export const MenuIcon = (p: IconProps) => (
   </Base>
 );
 
+// --- editor icons ---
+export const ListBulletIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M8 6h13M8 12h13M8 18h13" />
+    <circle cx="3.5" cy="6" r="1.2" />
+    <circle cx="3.5" cy="12" r="1.2" />
+    <circle cx="3.5" cy="18" r="1.2" />
+  </Base>
+);
+
+export const ListOrderedIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M10 6h11M10 12h11M10 18h11M4 4v4M3 8h2M3 13.5h2l-2 2.5h2" />
+  </Base>
+);
+
+export const ChecklistIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M10 6h11M10 12h11M10 18h11" />
+    <path d="M3 6l1.2 1.2L6.5 5M3 17l1.2 1.2L6.5 16" />
+  </Base>
+);
+
+export const QuoteIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M7 7H4a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h2v2a2 2 0 0 1-2 2M20 7h-3a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h2v2a2 2 0 0 1-2 2" />
+  </Base>
+);
+
+export const CodeBlockIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M8 9l-3 3 3 3M16 9l3 3-3 3M13 7l-2 10" />
+  </Base>
+);
+
+export const LinkIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1" />
+    <path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1" />
+  </Base>
+);
+
+export const AlignLeftIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M3 6h18M3 12h12M3 18h15" />
+  </Base>
+);
+
+export const AlignCenterIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M3 6h18M6 12h12M5 18h14" />
+  </Base>
+);
+
+export const AlignRightIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M3 6h18M9 12h12M6 18h15" />
+  </Base>
+);
+
+export const UndoIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M9 7L4 12l5 5" />
+    <path d="M4 12h11a5 5 0 0 1 0 10h-1" />
+  </Base>
+);
+
+export const RedoIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M15 7l5 5-5 5" />
+    <path d="M20 12H9a5 5 0 0 0 0 10h1" />
+  </Base>
+);
+
+export const MinusIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M5 12h14" />
+  </Base>
+);
+
+export const TemplateIcon = (p: IconProps) => (
+  <Base {...p}>
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    <path d="M3 9h18M9 9v12" />
+  </Base>
+);
+
+export const TrashIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+  </Base>
+);
+
 export const CloseIcon = (p: IconProps) => (
   <Base {...p}>
     <path d="M18 6L6 18M6 6l12 12" />

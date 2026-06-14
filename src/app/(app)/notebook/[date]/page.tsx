@@ -1,26 +1,32 @@
+import { notFound } from "next/navigation";
 import TopBar from "@/components/TopBar";
-import NotebookCalendar from "@/components/notebook/NotebookCalendar";
+import NoteEditor from "@/components/notebook/NoteEditor";
 import {
   getAccountsForCurrentUser,
   getActiveAccount,
   getCurrentUser,
 } from "@/lib/account";
-import { getMonthNotes } from "@/lib/notebook";
+import { getNote, listTemplates, isValidDate } from "@/lib/notebook";
 
 export const dynamic = "force-dynamic";
 
-export default async function NotebookPage() {
+export default async function NotePage({
+  params,
+}: {
+  params: Promise<{ date: string }>;
+}) {
+  const { date } = await params;
+  if (!isValidDate(date)) notFound();
+
   const [user, accounts, account] = await Promise.all([
     getCurrentUser(),
     getAccountsForCurrentUser(),
     getActiveAccount(),
   ]);
 
-  const now = new Date();
-  const year = now.getUTCFullYear();
-  const month = now.getUTCMonth();
-  const ym = `${year}-${String(month + 1).padStart(2, "0")}`;
-  const notes = user ? await getMonthNotes(user.id, ym) : [];
+  const [note, templates] = user
+    ? await Promise.all([getNote(user.id, date), listTemplates(user.id)])
+    : [null, []];
 
   const initial = (user?.name ?? "T").charAt(0).toUpperCase();
 
@@ -37,11 +43,7 @@ export default async function NotebookPage() {
         activeId={account?.id ?? ""}
         userInitial={initial}
       />
-      <NotebookCalendar
-        initialYear={year}
-        initialMonth={month}
-        initialNotes={notes}
-      />
+      <NoteEditor date={date} note={note} templates={templates} />
     </>
   );
 }
