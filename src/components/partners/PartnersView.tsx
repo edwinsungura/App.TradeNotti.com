@@ -207,19 +207,29 @@ export default function PartnersView({
                       value={formatMoney(p.stats.weekNet)}
                       tone={p.stats.weekNet >= 0 ? "up" : "down"}
                       sub={
-                        <span
-                          className={
-                            p.stats.weekChange >= 0 ? "text-profit" : "text-loss"
-                          }
-                        >
+                        <span className={p.stats.weekChange >= 0 ? "text-profit" : "text-loss"}>
                           {p.stats.weekChange >= 0 ? "▲" : "▼"}{" "}
-                          {changeLabel(p.stats.weekChange)} vs last wk
+                          {p.stats.netChangePct != null
+                            ? `${Math.abs(p.stats.netChangePct).toFixed(1)}% vs last wk`
+                            : `${changeLabel(p.stats.weekChange)} vs last wk`}
                         </span>
                       }
                     />
                     <Stat
                       label="Win rate"
                       value={p.stats.winRate == null ? "—" : `${Math.round(p.stats.winRate)}%`}
+                      sub={
+                        p.stats.winRatePrev != null && p.stats.winRate != null ? (
+                          <span
+                            className={
+                              p.stats.winRate >= p.stats.winRatePrev ? "text-profit" : "text-loss"
+                            }
+                          >
+                            {p.stats.winRate >= p.stats.winRatePrev ? "▲" : "▼"} prev{" "}
+                            {Math.round(p.stats.winRatePrev)}%
+                          </span>
+                        ) : undefined
+                      }
                     />
                     <Stat label="Trades" value={String(p.stats.trades)} />
                     <span className="ml-auto">

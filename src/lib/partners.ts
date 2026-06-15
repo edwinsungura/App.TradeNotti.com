@@ -7,7 +7,9 @@ export type Access = "STATS" | "FULL";
 export interface PartnerStats {
   weekNet: number;
   weekChange: number; // net change vs the previous week
+  netChangePct: number | null; // % net change vs previous week
   winRate: number | null;
+  winRatePrev: number | null; // previous week's win rate
   trades: number;
   spark: number[]; // cumulative equity points over the last 7 days
   lastActive: string | null; // relative label, e.g. "2h ago"
@@ -66,7 +68,9 @@ async function statsForUser(userId: string): Promise<PartnerStats> {
   const empty: PartnerStats = {
     weekNet: 0,
     weekChange: 0,
+    netChangePct: null,
     winRate: null,
+    winRatePrev: null,
     trades: 0,
     spark: [],
     lastActive: null,
@@ -86,6 +90,8 @@ async function statsForUser(userId: string): Promise<PartnerStats> {
   let prevWeekNet = 0;
   let wins = 0;
   let weekTrades = 0;
+  let prevWins = 0;
+  let prevTrades = 0;
   let run = 0;
   let lastActive: string | null = null;
   const spark: number[] = [];
@@ -100,12 +106,16 @@ async function statsForUser(userId: string): Promise<PartnerStats> {
       lastActive = relativeTime(t.closedAt);
     } else {
       prevWeekNet += p;
+      if (p > 0) prevWins++;
+      prevTrades++;
     }
   }
   return {
     weekNet,
     weekChange: weekNet - prevWeekNet,
+    netChangePct: prevWeekNet !== 0 ? ((weekNet - prevWeekNet) / Math.abs(prevWeekNet)) * 100 : null,
     winRate: weekTrades ? (wins / weekTrades) * 100 : null,
+    winRatePrev: prevTrades ? (prevWins / prevTrades) * 100 : null,
     trades: weekTrades,
     spark,
     lastActive,
