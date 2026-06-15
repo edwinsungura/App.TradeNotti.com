@@ -18,13 +18,48 @@ datasource db {
 model User {
   id        String    @id @default(cuid())
   email     String    @unique
+  username  String    @unique
   name      String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  accounts      Account[]
-  notes         Note[]
-  noteTemplates NoteTemplate[]
+  accounts             Account[]
+  notes                Note[]
+  noteTemplates        NoteTemplate[]
+  sentPartnerships     Partnership[]  @relation("Requester")
+  receivedPartnerships Partnership[]  @relation("Addressee")
+}
+
+enum PartnerAccess {
+  STATS // share summary stats only
+  FULL // share the full journal
+}
+
+enum PartnerStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+// A two-way accountability link between two users. Each side grants the other a
+// chosen access level; the link is live once accepted.
+model Partnership {
+  id          String        @id @default(cuid())
+  requesterId String
+  requester   User          @relation("Requester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addresseeId String
+  addressee   User          @relation("Addressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+  status      PartnerStatus @default(PENDING)
+
+  requesterAccess PartnerAccess @default(STATS) // what the requester shares
+  addresseeAccess PartnerAccess @default(STATS) // what the addressee shares
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([requesterId, addresseeId])
+  @@index([addresseeId, status])
+  @@index([requesterId, status])
 }
 
 // A Notion-style page attached to a calendar day (multiple pages per day allowed).

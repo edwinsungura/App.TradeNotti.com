@@ -10,6 +10,64 @@ function at(daysAgo: number, utcHour: number): Date {
   return d;
 }
 
+const PARTNER_SYMS = ["EUR/USD", "XAU/USD", "GBP/USD", "USD/JPY", "AUD/USD"];
+
+// Create (or reset) a demo partner trader with a week of closed trades whose
+// P&L sequence is supplied — used so partner stat cards show real numbers.
+async function seedTrader(opts: {
+  email: string;
+  username: string;
+  name: string;
+  balance: number;
+  pnls: number[];
+}): Promise<string> {
+  const user = await prisma.user.upsert({
+    where: { email: opts.email },
+    create: { email: opts.email, username: opts.username, name: opts.name },
+    update: { username: opts.username, name: opts.name },
+  });
+  let account = await prisma.account.findFirst({
+    where: { userId: user.id, label: "Main" },
+  });
+  if (!account) {
+    account = await prisma.account.create({
+      data: {
+        userId: user.id,
+        label: "Main",
+        broker: "MetaTrader 5",
+        currency: "USD",
+        type: "LIVE",
+        balance: opts.balance,
+      },
+    });
+  }
+  await prisma.trade.deleteMany({ where: { accountId: account.id } });
+
+  let i = 0;
+  for (const pnl of opts.pnls) {
+    const opened = at((i % 6) + 1, 8 + (i % 6));
+    await prisma.trade.create({
+      data: {
+        accountId: account.id,
+        symbol: PARTNER_SYMS[i % PARTNER_SYMS.length],
+        direction: i % 2 ? "SHORT" : "LONG",
+        status: "CLOSED",
+        entry: 1.1,
+        stopLoss: 1.09,
+        takeProfit: 1.12,
+        exitPrice: 1.115,
+        volume: 0.5,
+        pnl,
+        rMultiple: pnl > 0 ? 2 : -1,
+        openedAt: opened,
+        closedAt: new Date(opened.getTime() + 2 * 3600 * 1000),
+      },
+    });
+    i++;
+  }
+  return user.id;
+}
+
 interface SeedTrade {
   symbol: string;
   direction: "LONG" | "SHORT";
@@ -58,6 +116,7 @@ export interface SeedSummary {
   closed: number;
   rules: number;
   open: number;
+  partners: number;
 }
 
 // Idempotent demo seed: upserts the demo user + account, then resets that
@@ -67,8 +126,8 @@ export async function seedDatabase(): Promise<SeedSummary> {
 
   const user = await prisma.user.upsert({
     where: { email },
-    create: { email, name: "Edwin" },
-    update: { name: "Edwin" },
+    create: { email, username: "edwin", name: "Edwin" },
+    update: { username: "edwin", name: "Edwin" },
   });
 
   // One account per user in the seed; keyed by label for idempotency.
@@ -143,6 +202,49 @@ export async function seedDatabase(): Promise<SeedSummary> {
     });
   }
 
+  // --- Demo partners ------------------------------------------------------
+  const marcusId = await seedTrader({
+    email: "marcus@tradenotti.com",
+    username: "marcustrades",
+    name: "Marcus Lee",
+    balance: 50000,
+    pnls: [400, 380, 360, 320, 300, 260, 240, -40, -30, -30, -20], // +2140, 7/11
+  });
+  const aishaId = await seedTrader({
+    email: "aisha@tradenotti.com",
+    username: "aishafx",
+    name: "Aisha Khan",
+    balance: 25000,
+    pnls: [120, 90, 60, -160, -150, -130, -120, -90], // -380, 3/8
+  });
+  const tomId = await seedTrader({
+    email: "tom@tradenotti.com",
+    username: "boydcapital",
+    name: "Tom Boyd",
+    balance: 100000,
+    pnls: [300, 250, -80, 180, -60, 220], // some activity for mutual context
+  });
+
+  // Reset and recreate partnerships among the demo users.
+  const everyone = [user.id, marcusId, aishaId, tomId];
+  await prisma.partnership.deleteMany({
+    where: {
+      OR: [{ requesterId: { in: everyone } }, { addresseeId: { in: everyone } }],
+    },
+  });
+  await prisma.partnership.createMany({
+    data: [
+      // Edwin's accepted partners (they share with Edwin).
+      { requesterId: marcusId, addresseeId: user.id, status: "ACCEPTED", requesterAccess: "FULL", addresseeAccess: "STATS" },
+      { requesterId: aishaId, addresseeId: user.id, status: "ACCEPTED", requesterAccess: "STATS", addresseeAccess: "STATS" },
+      // Incoming pending request to Edwin.
+      { requesterId: tomId, addresseeId: user.id, status: "PENDING", requesterAccess: "FULL" },
+      // Tom shares partners with Edwin (drives the "2 mutual partners" count).
+      { requesterId: tomId, addresseeId: marcusId, status: "ACCEPTED" },
+      { requesterId: tomId, addresseeId: aishaId, status: "ACCEPTED" },
+    ],
+  });
+
   // Populate open trades from the broker (mock by default).
   const synced = await syncAccountTrades(account.id);
 
@@ -186,5 +288,6 @@ export async function seedDatabase(): Promise<SeedSummary> {
     closed: CLOSED_TRADES.length,
     rules: RULES.length,
     open: synced.open,
+    partners: 3,
   };
 }

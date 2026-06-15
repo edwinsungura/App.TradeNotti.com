@@ -233,6 +233,13 @@ export const TemplateIcon = (p: IconProps) => (
   </Base>
 );
 
+export const EyeIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12z" />
+    <circle cx="12" cy="12" r="3" />
+  </Base>
+);
+
 export const ImageIcon = (p: IconProps) => (
   <Base {...p}>
     <rect x="3" y="3" width="18" height="18" rx="2" />
