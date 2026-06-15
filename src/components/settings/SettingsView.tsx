@@ -158,7 +158,7 @@ export default function SettingsView({
               <button
                 onClick={() => avatarRef.current?.click()}
                 aria-label="Change photo"
-                className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-surface text-ink-soft shadow-sm hover:bg-black/[0.04]"
+                className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-surface text-ink-soft shadow-sm transition-colors hover:text-accent"
               >
                 <ImageIcon size={15} />
               </button>
