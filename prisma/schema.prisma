@@ -26,8 +26,23 @@ model User {
   accounts             Account[]
   notes                Note[]
   noteTemplates        NoteTemplate[]
+  resourceDocs         ResourceDoc[]
   sentPartnerships     Partnership[]  @relation("Requester")
   receivedPartnerships Partnership[]  @relation("Addressee")
+}
+
+// A free-form trading document (plan, routine, psychology notes) — same block
+// editor as the notebook.
+model ResourceDoc {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String   @default("Untitled")
+  content   Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 enum PartnerAccess {
