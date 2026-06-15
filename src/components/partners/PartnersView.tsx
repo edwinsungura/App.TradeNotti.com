@@ -207,12 +207,12 @@ export default function PartnersView({
                       value={formatMoney(p.stats.weekNet)}
                       tone={p.stats.weekNet >= 0 ? "up" : "down"}
                       sub={
-                        <span className={p.stats.weekChange >= 0 ? "text-profit" : "text-loss"}>
-                          {p.stats.weekChange >= 0 ? "▲" : "▼"}{" "}
-                          {p.stats.netChangePct != null
-                            ? `${Math.abs(p.stats.netChangePct).toFixed(1)}% vs last wk`
-                            : `${changeLabel(p.stats.weekChange)} vs last wk`}
-                        </span>
+                        p.stats.netChangePct != null ? (
+                          <span className={p.stats.netChangePct >= 0 ? "text-profit" : "text-loss"}>
+                            {p.stats.netChangePct >= 0 ? "▲" : "▼"}{" "}
+                            {Math.abs(p.stats.netChangePct).toFixed(1)}% vs last wk
+                          </span>
+                        ) : undefined
                       }
                     />
                     <Stat
@@ -293,12 +293,6 @@ export default function PartnersView({
       </div>
     </div>
   );
-}
-
-function changeLabel(ch: number): string {
-  return `${ch >= 0 ? "+" : "-"}$${Math.abs(ch).toLocaleString("en-US", {
-    maximumFractionDigits: 0,
-  })}`;
 }
 
 function Stat({

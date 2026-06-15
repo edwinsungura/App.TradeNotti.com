@@ -45,7 +45,10 @@ async function seedTrader(opts: {
 
   let i = 0;
   for (const pnl of opts.pnls) {
-    const opened = at((i % 6) + 1, 8 + (i % 6));
+    // Alternate trades between this week (1–6d ago) and last week (8–13d ago)
+    // so partner cards have a real previous-week baseline to compare against.
+    const dayAgo = (i % 6) + (i % 2 === 1 ? 8 : 1);
+    const opened = at(dayAgo, 8 + (i % 6));
     await prisma.trade.create({
       data: {
         accountId: account.id,
