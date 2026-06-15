@@ -13,9 +13,9 @@ const PERIODS: { id: Period; label: string }[] = [
 ];
 
 function downloadCsv(data: PerformanceData) {
-  const head = ["Period", "Trades", "Wins", "Losses", "Win rate %", "Avg R", "Net P&L", "Max DD"];
+  const head = ["Period", "Trades", "Wins", "Losses", "Win rate %", "Avg R", "Net P&L", "Avg win", "Avg loss"];
   const lines = data.rows.map((r) =>
-    [r.period, r.trades, r.wins, r.losses, Math.round(r.winRate), r.avgR?.toFixed(2) ?? "", r.net.toFixed(2), r.maxDD.toFixed(2)].join(","),
+    [r.period, r.trades, r.wins, r.losses, Math.round(r.winRate), r.avgR?.toFixed(2) ?? "", r.net.toFixed(2), r.avgWin?.toFixed(2) ?? "", r.avgLoss?.toFixed(2) ?? ""].join(","),
   );
   const csv = [head.join(","), ...lines].join("\n");
   const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
@@ -115,7 +115,7 @@ export default function PerformancePanel({
               <th className="text-right">Win rate</th>
               <th className="text-right">Avg R</th>
               <th className="text-right">Net P&amp;L</th>
-              <th className="!pr-0 text-right">Max DD</th>
+              <th className="!pr-0 text-right">Avg win / loss</th>
             </tr>
           </thead>
           <tbody className="text-[13.5px]">
@@ -139,7 +139,15 @@ export default function PerformancePanel({
                   <td className={`num text-right font-medium ${r.net >= 0 ? "text-profit" : "text-loss"}`}>
                     {formatMoney(r.net)}
                   </td>
-                  <td className="num !pr-0 text-right text-loss">{formatMoney(r.maxDD)}</td>
+                  <td className="num !pr-0 text-right">
+                    <span className="text-profit">
+                      {r.avgWin == null ? "—" : formatMoney(r.avgWin)}
+                    </span>
+                    <span className="text-faint"> / </span>
+                    <span className="text-loss">
+                      {r.avgLoss == null ? "—" : formatMoney(r.avgLoss)}
+                    </span>
+                  </td>
                 </tr>
               ))
             )}

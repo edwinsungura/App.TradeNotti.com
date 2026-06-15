@@ -77,7 +77,8 @@ export interface PerformanceRow {
   winRate: number; // 0–100
   avgR: number | null;
   net: number;
-  maxDD: number; // <= 0
+  avgWin: number | null; // mean P&L of winning trades
+  avgLoss: number | null; // mean P&L of losing trades (<= 0)
 }
 
 export interface PerformanceData {
@@ -139,9 +140,8 @@ export async function getPerformance(
     net: number;
     rSum: number;
     rCount: number;
-    eq: number;
-    peak: number;
-    dd: number;
+    winSum: number;
+    lossSum: number;
   }
   const buckets = new Map<string, Bucket>();
 
@@ -170,23 +170,24 @@ export async function getPerformance(
         net: 0,
         rSum: 0,
         rCount: 0,
-        eq: 0,
-        peak: 0,
-        dd: 0,
+        winSum: 0,
+        lossSum: 0,
       };
       buckets.set(key, b);
     }
     b.trades++;
     b.net += pnl;
-    if (pnl > 0) b.wins++;
-    else if (pnl < 0) b.losses++;
+    if (pnl > 0) {
+      b.wins++;
+      b.winSum += pnl;
+    } else if (pnl < 0) {
+      b.losses++;
+      b.lossSum += pnl;
+    }
     if (r != null) {
       b.rSum += r;
       b.rCount++;
     }
-    b.eq += pnl;
-    b.peak = Math.max(b.peak, b.eq);
-    b.dd = Math.min(b.dd, b.eq - b.peak);
 
     sNet += pnl;
     if (pnl > 0) sWins++;
@@ -209,7 +210,8 @@ export async function getPerformance(
       winRate: b.trades ? (b.wins / b.trades) * 100 : 0,
       avgR: b.rCount ? b.rSum / b.rCount : null,
       net: b.net,
-      maxDD: b.dd,
+      avgWin: b.wins ? b.winSum / b.wins : null,
+      avgLoss: b.losses ? b.lossSum / b.losses : null,
     }));
 
   return {
