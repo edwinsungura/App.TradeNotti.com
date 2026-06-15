@@ -202,7 +202,21 @@ export default function PartnersView({
                   </div>
 
                   <div className="flex items-center gap-6 border-t border-line/70 px-5 py-4">
-                    <Stat label="Week net" value={formatMoney(p.stats.weekNet)} tone={p.stats.weekNet >= 0 ? "up" : "down"} />
+                    <Stat
+                      label="Week net"
+                      value={formatMoney(p.stats.weekNet)}
+                      tone={p.stats.weekNet >= 0 ? "up" : "down"}
+                      sub={
+                        <span
+                          className={
+                            p.stats.weekChange >= 0 ? "text-profit" : "text-loss"
+                          }
+                        >
+                          {p.stats.weekChange >= 0 ? "▲" : "▼"}{" "}
+                          {changeLabel(p.stats.weekChange)} vs last wk
+                        </span>
+                      }
+                    />
                     <Stat
                       label="Win rate"
                       value={p.stats.winRate == null ? "—" : `${Math.round(p.stats.winRate)}%`}
@@ -271,14 +285,22 @@ export default function PartnersView({
   );
 }
 
+function changeLabel(ch: number): string {
+  return `${ch >= 0 ? "+" : "-"}$${Math.abs(ch).toLocaleString("en-US", {
+    maximumFractionDigits: 0,
+  })}`;
+}
+
 function Stat({
   label,
   value,
   tone,
+  sub,
 }: {
   label: string;
   value: string;
   tone?: "up" | "down";
+  sub?: React.ReactNode;
 }) {
   return (
     <span>
@@ -290,6 +312,7 @@ function Stat({
       >
         {value}
       </span>
+      {sub && <span className="mt-0.5 block text-[11px]">{sub}</span>}
     </span>
   );
 }

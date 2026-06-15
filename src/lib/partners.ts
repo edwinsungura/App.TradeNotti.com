@@ -5,6 +5,7 @@ export type Access = "STATS" | "FULL";
 
 export interface PartnerStats {
   weekNet: number;
+  weekChange: number; // net change vs the previous week
   winRate: number | null;
   trades: number;
   spark: number[]; // cumulative equity points over the last 7 days
@@ -63,6 +64,7 @@ async function statsForUser(userId: string): Promise<PartnerStats> {
   const ids = accounts.map((a) => a.id);
   const empty: PartnerStats = {
     weekNet: 0,
+    weekChange: 0,
     winRate: null,
     trades: 0,
     spark: [],
@@ -71,31 +73,41 @@ async function statsForUser(userId: string): Promise<PartnerStats> {
   if (ids.length === 0) return empty;
 
   const weekAgo = new Date(Date.now() - 7 * 864e5);
+  const twoWeeksAgo = new Date(Date.now() - 14 * 864e5);
   const trades = await prisma.trade.findMany({
-    where: { accountId: { in: ids }, status: "CLOSED", closedAt: { gte: weekAgo } },
+    where: { accountId: { in: ids }, status: "CLOSED", closedAt: { gte: twoWeeksAgo } },
     orderBy: { closedAt: "asc" },
     select: { pnl: true, closedAt: true },
   });
   if (trades.length === 0) return empty;
 
   let weekNet = 0;
+  let prevWeekNet = 0;
   let wins = 0;
+  let weekTrades = 0;
   let run = 0;
+  let lastActive: string | null = null;
   const spark: number[] = [];
   for (const t of trades) {
     const p = Number(t.pnl) || 0;
-    weekNet += p;
-    if (p > 0) wins++;
-    run += p;
-    spark.push(run);
+    if (t.closedAt && t.closedAt >= weekAgo) {
+      weekNet += p;
+      if (p > 0) wins++;
+      weekTrades++;
+      run += p;
+      spark.push(run);
+      lastActive = relativeTime(t.closedAt);
+    } else {
+      prevWeekNet += p;
+    }
   }
-  const last = trades[trades.length - 1].closedAt;
   return {
     weekNet,
-    winRate: (wins / trades.length) * 100,
-    trades: trades.length,
+    weekChange: weekNet - prevWeekNet,
+    winRate: weekTrades ? (wins / weekTrades) * 100 : null,
+    trades: weekTrades,
     spark,
-    lastActive: last ? relativeTime(last) : null,
+    lastActive,
   };
 }
 
