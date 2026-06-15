@@ -147,7 +147,7 @@ export default function AnalyticsView({
         </div>
 
         {/* Stat cards */}
-        <div className="mb-5 grid gap-4 sm:grid-cols-3">
+        <div className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             label="Net P&L"
             value={compactMoney(data.netPnl)}
@@ -184,6 +184,19 @@ export default function AnalyticsView({
               )
             }
           />
+          <section className="rounded-2xl border border-line bg-surface p-5">
+            <div className="kicker mb-2">Avg win / loss</div>
+            <div className="flex items-baseline gap-2">
+              <span className="num text-[22px] font-bold leading-none text-profit">
+                {data.avgWin == null ? "—" : compactMoney(data.avgWin)}
+              </span>
+              <span className="text-faint">/</span>
+              <span className="num text-[22px] font-bold leading-none text-loss">
+                {data.avgLoss == null ? "—" : compactMoney(data.avgLoss)}
+              </span>
+            </div>
+            <div className="mt-3 text-[12px] text-faint">avg win vs avg loss</div>
+          </section>
         </div>
 
         {/* Equity + distribution */}
