@@ -5,7 +5,6 @@ import type {
   PartnerCard,
   IncomingRequest,
   OutgoingRequest,
-  Access,
 } from "@/lib/partners";
 import { formatMoney } from "@/lib/format";
 import Sparkline from "./Sparkline";
@@ -44,14 +43,6 @@ function Avatar({ name, username, size = 40 }: { name: string; username: string;
   );
 }
 
-function AccessBadge({ access }: { access: Access }) {
-  return (
-    <span className="inline-flex items-center gap-1 text-[12px] font-medium text-accent">
-      <EyeIcon size={13} /> {access === "FULL" ? "Full stats" : "Stats"}
-    </span>
-  );
-}
-
 export default function PartnersView({
   initial,
 }: {
@@ -63,7 +54,6 @@ export default function PartnersView({
 }) {
   const [data, setData] = useState(initial);
   const [handle, setHandle] = useState("");
-  const [access, setAccess] = useState<Access>("STATS");
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
 
@@ -80,7 +70,7 @@ export default function PartnersView({
       const res = await fetch("/api/partners/invite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: handle, access }),
+        body: JSON.stringify({ username: handle }),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error || "Could not send invite.");
@@ -107,28 +97,13 @@ export default function PartnersView({
     await refresh();
   };
 
-  const setShared = async (id: string, value: Access) => {
-    setData((d) => ({
-      ...d,
-      partners: d.partners.map((p) =>
-        p.partnershipId === id ? { ...p, myAccess: value } : p,
-      ),
-    }));
-    await fetch(`/api/partners/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ access: value }),
-    });
-  };
-
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Partners</h1>
         <p className="mt-1 max-w-2xl text-[13.5px] text-muted">
-          Share your account with a trusted trader and keep each other honest.
-          They see what you choose — stats or the full journal — and can nudge you
-          when you slip.
+          Share your stats with a trusted trader and keep each other honest. They
+          see your performance numbers and can nudge you when you slip.
         </p>
 
         <div className="mt-6 grid gap-5 lg:grid-cols-[1fr_320px]">
@@ -146,14 +121,6 @@ export default function PartnersView({
                   placeholder="@username"
                   className="flex-1 rounded-lg border border-line px-3.5 py-2.5 text-[14px] outline-none focus:border-accent/40"
                 />
-                <select
-                  value={access}
-                  onChange={(e) => setAccess(e.target.value as Access)}
-                  className="rounded-lg border border-line px-3 py-2.5 text-[13px] font-medium text-ink-soft outline-none"
-                >
-                  <option value="STATS">Share stats</option>
-                  <option value="FULL">Share full journal</option>
-                </select>
                 <button
                   onClick={invite}
                   disabled={sending}
@@ -218,23 +185,13 @@ export default function PartnersView({
                         {p.name}
                       </span>
                       <span className="flex items-center gap-2 text-[12px] text-faint">
-                        @{p.username} <span>·</span> <AccessBadge access={p.access} />{" "}
+                        @{p.username} <span>·</span>
+                        <span className="inline-flex items-center gap-1 font-medium text-accent">
+                          <EyeIcon size={13} /> Stats
+                        </span>
                         <span>·</span> Partners since {sinceLabel(p.since)}
                       </span>
                     </span>
-                    <label className="flex items-center gap-1.5 text-[12px] text-faint">
-                      You share:
-                      <select
-                        value={p.myAccess}
-                        onChange={(e) =>
-                          setShared(p.partnershipId, e.target.value as Access)
-                        }
-                        className="rounded-md border border-line px-1.5 py-1 text-[12px] font-medium text-ink-soft outline-none"
-                      >
-                        <option value="STATS">Stats</option>
-                        <option value="FULL">Full</option>
-                      </select>
-                    </label>
                     <button
                       onClick={() => remove(p.partnershipId)}
                       aria-label="Remove partner"

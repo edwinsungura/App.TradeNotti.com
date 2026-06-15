@@ -234,11 +234,11 @@ export async function seedDatabase(): Promise<SeedSummary> {
   });
   await prisma.partnership.createMany({
     data: [
-      // Edwin's accepted partners (they share with Edwin).
-      { requesterId: marcusId, addresseeId: user.id, status: "ACCEPTED", requesterAccess: "FULL", addresseeAccess: "STATS" },
-      { requesterId: aishaId, addresseeId: user.id, status: "ACCEPTED", requesterAccess: "STATS", addresseeAccess: "STATS" },
+      // Edwin's accepted partners (they share stats with Edwin).
+      { requesterId: marcusId, addresseeId: user.id, status: "ACCEPTED" },
+      { requesterId: aishaId, addresseeId: user.id, status: "ACCEPTED" },
       // Incoming pending request to Edwin.
-      { requesterId: tomId, addresseeId: user.id, status: "PENDING", requesterAccess: "FULL" },
+      { requesterId: tomId, addresseeId: user.id, status: "PENDING" },
       // Tom shares partners with Edwin (drives the "2 mutual partners" count).
       { requesterId: tomId, addresseeId: marcusId, status: "ACCEPTED" },
       { requesterId: tomId, addresseeId: aishaId, status: "ACCEPTED" },
