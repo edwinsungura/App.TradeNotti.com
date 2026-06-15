@@ -7,10 +7,10 @@ export default function Logo({ className }: { className?: string }) {
         TradeNotti
       </span>
       <svg
-        viewBox="0 0 104 17"
+        viewBox="0 2 104 13"
         width={104}
-        height={17}
-        className="mt-1.5"
+        height={13}
+        className="mt-0.5"
         fill="none"
         aria-hidden
       >
