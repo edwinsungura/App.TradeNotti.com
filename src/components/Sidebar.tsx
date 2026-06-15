@@ -55,10 +55,10 @@ function NavLink({
       className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
         active
           ? "bg-ink text-white"
-          : "text-[#15171c] hover:bg-black/[0.04]"
+          : "text-ink hover:bg-black/[0.04]"
       }`}
     >
-      <span className={active ? "text-white" : "text-[#15171c]"}>
+      <span className={active ? "text-white" : "text-ink"}>
         <Icon size={18} />
       </span>
       {label}
