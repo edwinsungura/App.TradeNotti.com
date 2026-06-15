@@ -17,7 +17,7 @@ export const getCurrentUser = cache(async () => {
 export const getAccountsForCurrentUser = cache(async () => {
   const email = await getCurrentUserEmail();
   return prisma.account.findMany({
-    where: { user: { email } },
+    where: { user: { email }, archived: false },
     orderBy: { createdAt: "asc" },
   });
 });

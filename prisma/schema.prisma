@@ -20,6 +20,7 @@ model User {
   email     String    @unique
   username  String    @unique
   name      String
+  avatarUrl String?   @db.Text
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
@@ -144,6 +145,7 @@ model Account {
   currency  String      @default("USD")
   type      AccountType @default(LIVE)
   balance   Decimal     @default(0) @db.Decimal(18, 2)
+  archived  Boolean     @default(false)
 
   // Broker connection (MetaApi.cloud). Null until a live account is linked.
   metaApiAccountId String?
