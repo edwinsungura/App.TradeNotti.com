@@ -39,6 +39,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Feature headings use the Bricolage Grotesque display font. */
+h1 {
+  font-family: var(--font-display), var(--font-sans), ui-sans-serif, system-ui,
+    sans-serif;
+}
+
 /* Trade figures: Notion-style — same UI sans font, just tabular for alignment. */
 .num {
   font-variant-numeric: tabular-nums;
