@@ -27,8 +27,31 @@ model User {
   notes                Note[]
   noteTemplates        NoteTemplate[]
   resourceDocs         ResourceDoc[]
+  pins                 Pin[]
   sentPartnerships     Partnership[]  @relation("Requester")
   receivedPartnerships Partnership[]  @relation("Addressee")
+}
+
+enum PinDirection {
+  LONG
+  SHORT
+}
+
+// A pinned chart screenshot on the trader's Pinterest-style board.
+model Pin {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  image     String        @db.Text // base64 data URL
+  symbol    String?
+  timeframe String?
+  direction PinDirection?
+  note      String?       @db.Text
+  tags      String[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([userId])
 }
 
 // A free-form trading document (plan, routine, psychology notes) — same block
