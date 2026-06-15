@@ -125,7 +125,7 @@ export default function TodaysTrades({
                 <tr
                   key={t.id}
                   onClick={() => router.push(`/journal/${t.id}`)}
-                  className="cursor-pointer border-b border-line/70 transition-colors last:border-0 hover:bg-black/[0.02] [&>td]:whitespace-nowrap [&>td]:px-3 [&>td]:py-3.5"
+                  className="cursor-pointer border-b border-line/70 transition-colors last:border-0 hover:bg-black/[0.02] [&>td]:px-3 [&>td]:py-3.5"
                 >
                   <td className="!pl-0">
                     <span className="flex items-center gap-2 font-medium">
@@ -157,7 +157,7 @@ export default function TodaysTrades({
                     <GradePill grade={t.grade} />
                   </td>
                   <td>
-                    <span className="flex gap-1.5">
+                    <span className="flex flex-wrap gap-1.5">
                       {t.tags.length === 0 ? (
                         <span className="text-faint">—</span>
                       ) : (

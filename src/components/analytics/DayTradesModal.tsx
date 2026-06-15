@@ -17,7 +17,9 @@ function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div className="kicker mb-0.5">{label}</div>
-      <div className="num text-[13px] font-medium text-ink-soft">{value}</div>
+      <div className="num whitespace-nowrap text-[12.5px] font-medium text-ink-soft">
+        {value}
+      </div>
     </div>
   );
 }
@@ -69,7 +71,7 @@ function TradeBlock({ t }: { t: DayTrade }) {
         </span>
       </div>
 
-      <div className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="mb-3 grid grid-cols-5 gap-2.5">
         <Fact label="Entry" value={formatPrice(t.entry)} />
         <Fact label="Stop" value={formatPrice(t.stopLoss)} />
         <Fact label="Target" value={formatPrice(t.takeProfit)} />
