@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { PinData } from "@/lib/pinboard";
-import PinModal from "./PinModal";
+import PinViewer from "./PinViewer";
 import { ImageIcon, UploadIcon } from "../icons";
 
 // Downscale + compress an image File to a JPEG data URL.
@@ -28,28 +28,40 @@ async function compress(file: File, max = 1400, quality = 0.82): Promise<string>
   }
 }
 
-function relTime(iso: string): string {
-  const d = new Date(iso);
-  const now = new Date();
-  const sameDay = d.toDateString() === now.toDateString();
-  if (sameDay) return "Today";
-  const days = Math.round((now.getTime() - d.getTime()) / 864e5);
-  if (days <= 1) return "Yesterday";
-  if (days < 7) return `${days}d ago`;
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
 export default function PinboardView({ initial }: { initial: PinData[] }) {
   const [pins, setPins] = useState<PinData[]>(initial);
-  const [draft, setDraft] = useState<string | null>(null); // new pin image
-  const [editing, setEditing] = useState<PinData | null>(null);
+  const [viewer, setViewer] = useState<number | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Upload images straight to the board — no details needed (Pinterest-style).
   const handleFiles = async (files: FileList | File[]) => {
-    const file = Array.from(files).find((f) => f.type.startsWith("image/"));
-    if (!file) return;
-    setDraft(await compress(file));
+    const images = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (images.length === 0) return;
+    setUploading(true);
+    try {
+      for (const file of images) {
+        const image = await compress(file);
+        const res = await fetch("/api/pinboard", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image }),
+        });
+        if (res.ok) {
+          const { pin } = await res.json();
+          setPins((prev) => [pin, ...prev]);
+        }
+      }
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const deletePin = async (id: string) => {
+    setPins((prev) => prev.filter((p) => p.id !== id));
+    setViewer(null);
+    await fetch(`/api/pinboard/${id}`, { method: "DELETE" });
   };
 
   return (
@@ -72,30 +84,23 @@ export default function PinboardView({ initial }: { initial: PinData[] }) {
             <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Pinboard</h1>
             <p className="mt-1 max-w-xl text-[13.5px] text-muted">
               Drag in chart screenshots from MetaTrader 4 / 5 — or any platform.
-              Tag them, group them, keep the ones you&apos;d repeat in a heartbeat
-              front and centre.
+              Keep the setups you&apos;d repeat in a heartbeat front and centre.
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-[13px] font-medium text-ink-soft hover:bg-black/[0.04]"
-            >
-              <ImageIcon size={15} /> Pin from MT4 / MT5
-            </button>
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="flex items-center gap-1.5 rounded-lg bg-accent px-3.5 py-2 text-[13px] font-medium text-white hover:bg-accent/90"
-            >
-              <UploadIcon size={15} /> Upload screenshot
-            </button>
-          </div>
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-1.5 rounded-lg bg-accent px-3.5 py-2 text-[13px] font-medium text-white hover:bg-accent/90 disabled:opacity-60"
+          >
+            <UploadIcon size={15} /> {uploading ? "Uploading…" : "Upload screenshot"}
+          </button>
         </div>
 
         <input
           ref={fileRef}
           type="file"
           accept="image/*"
+          multiple
           className="hidden"
           onChange={(e) => {
             if (e.target.files?.length) handleFiles(e.target.files);
@@ -104,15 +109,22 @@ export default function PinboardView({ initial }: { initial: PinData[] }) {
         />
 
         {/* Masonry board */}
-        <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 xl:columns-4">
-          {pins.map((p) => (
-            <PinCard key={p.id} pin={p} onClick={() => setEditing(p)} time={relTime(p.createdAt)} />
+        <div className="columns-2 gap-3 sm:columns-3 sm:gap-4 lg:columns-4">
+          {pins.map((p, i) => (
+            <button
+              key={p.id}
+              onClick={() => setViewer(i)}
+              className="mb-3 block w-full break-inside-avoid overflow-hidden rounded-2xl border border-line bg-surface transition-shadow hover:shadow-md sm:mb-4"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={p.image} alt="Chart" className="w-full object-cover" />
+            </button>
           ))}
 
           {/* Drop tile */}
           <button
             onClick={() => fileRef.current?.click()}
-            className={`mb-4 flex aspect-[4/3] w-full break-inside-avoid flex-col items-center justify-center gap-2 rounded-2xl border border-dashed text-faint transition-colors ${
+            className={`mb-3 flex aspect-[4/3] w-full break-inside-avoid flex-col items-center justify-center gap-2 rounded-2xl border border-dashed text-faint transition-colors sm:mb-4 ${
               dragOver ? "border-accent bg-accent-bg/40 text-accent" : "border-line hover:border-accent/50"
             }`}
           >
@@ -121,113 +133,17 @@ export default function PinboardView({ initial }: { initial: PinData[] }) {
             <span className="text-[11.5px]">PNG, JPG from MT4 / MT5 / TradingView</span>
           </button>
         </div>
-
-        {pins.length === 0 && (
-          <p className="mt-2 text-center text-[12px] text-faint">
-            Your board is empty — upload your first chart above.
-          </p>
-        )}
       </div>
 
-      {draft && (
-        <PinModal
-          mode="create"
-          image={draft}
-          onClose={() => setDraft(null)}
-          onSaved={(pin) => {
-            setPins((prev) => [pin, ...prev]);
-            setDraft(null);
-          }}
-        />
-      )}
-      {editing && (
-        <PinModal
-          mode="edit"
-          image={editing.image}
-          pin={editing}
-          onClose={() => setEditing(null)}
-          onSaved={(pin) => {
-            setPins((prev) => prev.map((p) => (p.id === pin.id ? pin : p)));
-            setEditing(null);
-          }}
-          onDeleted={(id) => {
-            setPins((prev) => prev.filter((p) => p.id !== id));
-            setEditing(null);
-          }}
+      {viewer !== null && (
+        <PinViewer
+          pins={pins}
+          index={viewer}
+          setIndex={setViewer}
+          onClose={() => setViewer(null)}
+          onDelete={deletePin}
         />
       )}
     </div>
-  );
-}
-
-function PinCard({
-  pin,
-  time,
-  onClick,
-}: {
-  pin: PinData;
-  time: string;
-  onClick: () => void;
-}) {
-  const long = pin.direction === "LONG";
-  const short = pin.direction === "SHORT";
-  return (
-    <button
-      onClick={onClick}
-      className="mb-4 block w-full break-inside-avoid overflow-hidden rounded-2xl border border-line bg-surface text-left transition-shadow hover:shadow-md"
-    >
-      <div className="relative">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={pin.image} alt={pin.symbol ?? "Chart"} className="w-full object-cover" />
-        {(pin.symbol || pin.timeframe) && (
-          <div className="absolute left-2 top-2 flex gap-1">
-            {pin.symbol && (
-              <span className="rounded-md bg-surface/90 px-1.5 py-0.5 text-[11px] font-semibold text-ink shadow-sm backdrop-blur">
-                {pin.symbol}
-              </span>
-            )}
-            {pin.timeframe && (
-              <span className="rounded-md bg-surface/90 px-1.5 py-0.5 text-[11px] font-medium text-muted shadow-sm backdrop-blur">
-                {pin.timeframe}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div className="p-3.5">
-        {(pin.timeframe || pin.direction) && (
-          <div className="mb-1.5 flex items-center justify-between">
-            <span className="text-[12px] text-faint">{pin.timeframe}</span>
-            {pin.direction && (
-              <span
-                className={`flex items-center gap-1 text-[12px] font-medium ${
-                  long ? "text-profit" : "text-loss"
-                }`}
-              >
-                <span aria-hidden className="text-[9px]">{long ? "▲" : "▼"}</span>
-                {short ? "Short" : "Long"}
-              </span>
-            )}
-          </div>
-        )}
-        {pin.note && (
-          <p className="text-[13px] leading-snug text-ink-soft">{pin.note}</p>
-        )}
-        {pin.tags.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {pin.tags.map((t) => (
-              <span
-                key={t}
-                className="rounded-md border border-line px-2 py-0.5 text-[11px] text-ink-soft"
-              >
-                {t}
-              </span>
-            ))}
-          </div>
-        )}
-        <p className="mt-2.5 text-[11px] text-faint">{time}</p>
-      </div>
-    </button>
   );
 }
