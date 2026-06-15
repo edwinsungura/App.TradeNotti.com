@@ -26,21 +26,6 @@ function downloadCsv(data: PerformanceData) {
   URL.revokeObjectURL(url);
 }
 
-function Summary({ label, value, tone }: { label: string; value: string; tone?: "up" | "down" }) {
-  return (
-    <span className="text-right">
-      <span className="kicker block">{label}</span>
-      <span
-        className={`num text-[15px] font-bold ${
-          tone === "up" ? "text-profit" : tone === "down" ? "text-loss" : "text-ink"
-        }`}
-      >
-        {value}
-      </span>
-    </span>
-  );
-}
-
 export default function PerformancePanel({
   accountId,
   initial,
@@ -66,8 +51,6 @@ export default function PerformancePanel({
     }
   };
 
-  const s = data.summary;
-
   return (
     <section className="rounded-2xl border border-line bg-surface p-6">
       <div className="mb-4 flex items-start justify-between">
@@ -83,7 +66,7 @@ export default function PerformancePanel({
         </button>
       </div>
 
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
+      <div className="mb-5 flex flex-wrap items-center gap-4">
         <div className={`inline-flex rounded-lg bg-black/[0.04] p-0.5 ${loading ? "opacity-60" : ""}`}>
           {PERIODS.map((p) => (
             <button
@@ -96,12 +79,6 @@ export default function PerformancePanel({
               {p.label}
             </button>
           ))}
-        </div>
-        <div className="flex items-center gap-6">
-          <Summary label="Net" value={formatMoney(s.net)} tone={s.net >= 0 ? "up" : "down"} />
-          <Summary label="Win rate" value={s.winRate == null ? "—" : `${Math.round(s.winRate)}%`} />
-          <Summary label="W / L" value={`${s.wins} / ${s.losses}`} />
-          <Summary label="Avg R" value={formatR(s.avgR)} />
         </div>
       </div>
 
