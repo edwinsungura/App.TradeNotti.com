@@ -197,7 +197,7 @@ model Rule {
   account   Account      @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
   text      String
-  category  RuleCategory
+  category  RuleCategory?
   active    Boolean      @default(true)
   order     Int          @default(0)
 
