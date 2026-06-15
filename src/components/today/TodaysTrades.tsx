@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowRightIcon } from "../icons";
 import type { TradeView } from "@/lib/trades";
@@ -57,6 +58,7 @@ export default function TodaysTrades({
   initialTrades: TradeView[];
   accountId: string;
 }) {
+  const router = useRouter();
   const [trades, setTrades] = useState(initialTrades);
 
   // Poll the broker-synced open trades to keep floating P&L fresh.
@@ -122,7 +124,8 @@ export default function TodaysTrades({
               {trades.map((t) => (
                 <tr
                   key={t.id}
-                  className="border-b border-line/70 last:border-0 [&>td]:px-3 [&>td]:py-3.5"
+                  onClick={() => router.push(`/journal/${t.id}`)}
+                  className="cursor-pointer border-b border-line/70 transition-colors last:border-0 hover:bg-black/[0.02] [&>td]:whitespace-nowrap [&>td]:px-3 [&>td]:py-3.5"
                 >
                   <td className="!pl-0">
                     <span className="flex items-center gap-2 font-medium">
@@ -154,7 +157,7 @@ export default function TodaysTrades({
                     <GradePill grade={t.grade} />
                   </td>
                   <td>
-                    <span className="flex flex-wrap gap-1.5">
+                    <span className="flex gap-1.5">
                       {t.tags.length === 0 ? (
                         <span className="text-faint">—</span>
                       ) : (
