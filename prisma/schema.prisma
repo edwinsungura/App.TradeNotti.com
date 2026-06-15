@@ -29,8 +29,33 @@ model User {
   noteTemplates        NoteTemplate[]
   resourceDocs         ResourceDoc[]
   pins                 Pin[]
+  notifications        Notification[]
   sentPartnerships     Partnership[]  @relation("Requester")
   receivedPartnerships Partnership[]  @relation("Addressee")
+}
+
+enum NotificationType {
+  PARTNER_REQUEST
+  PARTNER_ACCEPTED
+  INSIGHT
+  TRADE
+  SYSTEM
+}
+
+// In-app notification surfaced through the top-bar bell.
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String?
+  link      String?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
 }
 
 enum PinDirection {

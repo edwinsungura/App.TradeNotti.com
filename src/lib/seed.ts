@@ -245,6 +245,45 @@ export async function seedDatabase(): Promise<SeedSummary> {
     ],
   });
 
+  // Demo notifications for the bell.
+  await prisma.notification.deleteMany({ where: { userId: user.id } });
+  await prisma.notification.createMany({
+    data: [
+      {
+        userId: user.id,
+        type: "PARTNER_REQUEST",
+        title: "New partner request",
+        body: "Tom Boyd (@boydcapital) wants to partner with you.",
+        link: "/partners",
+        read: false,
+      },
+      {
+        userId: user.id,
+        type: "PARTNER_ACCEPTED",
+        title: "Partner request accepted",
+        body: "Marcus Lee (@marcustrades) accepted your partner request.",
+        link: "/partners",
+        read: false,
+      },
+      {
+        userId: user.id,
+        type: "INSIGHT",
+        title: "New daily insight",
+        body: "Your London-open trades outperform New York by +2.1R on average.",
+        link: "/today",
+        read: true,
+      },
+      {
+        userId: user.id,
+        type: "SYSTEM",
+        title: "Welcome to TradeNotti",
+        body: "Connect an account and start journaling your trades.",
+        link: "/settings",
+        read: true,
+      },
+    ],
+  });
+
   // Populate open trades from the broker (mock by default).
   const synced = await syncAccountTrades(account.id);
 

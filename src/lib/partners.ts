@@ -1,5 +1,6 @@
 import { prisma } from "./db";
 import type { PartnerAccess } from "@prisma/client";
+import { createNotification } from "./notifications";
 
 export type Access = "STATS" | "FULL";
 
@@ -229,6 +230,17 @@ export async function sendInvite(
       status: "PENDING",
     },
   });
+
+  const me = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { name: true, username: true },
+  });
+  await createNotification(target.id, {
+    type: "PARTNER_REQUEST",
+    title: "New partner request",
+    body: `${me?.name ?? "A trader"} (@${me?.username ?? "trader"}) wants to partner with you.`,
+    link: "/partners",
+  });
 }
 
 /** Accept or decline an incoming invite (must be the addressee). */
@@ -240,7 +252,7 @@ export async function respondInvite(
 ): Promise<void> {
   const link = await prisma.partnership.findFirst({
     where: { id, addresseeId: userId, status: "PENDING" },
-    select: { id: true },
+    select: { id: true, requesterId: true },
   });
   if (!link) throw new PartnerError("NOT_FOUND", "Request not found.");
 
@@ -248,6 +260,16 @@ export async function respondInvite(
     await prisma.partnership.update({
       where: { id },
       data: { status: "ACCEPTED", addresseeAccess: access as PartnerAccess },
+    });
+    const me = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, username: true },
+    });
+    await createNotification(link.requesterId, {
+      type: "PARTNER_ACCEPTED",
+      title: "Partner request accepted",
+      body: `${me?.name ?? "A trader"} (@${me?.username ?? "trader"}) accepted your partner request.`,
+      link: "/partners",
     });
   } else {
     await prisma.partnership.delete({ where: { id } });

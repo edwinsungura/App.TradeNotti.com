@@ -1,8 +1,9 @@
 import Link from "next/link";
 import AccountSwitcher, { type AccountOption } from "./AccountSwitcher";
 import MobileMenuButton from "./MobileMenuButton";
-import { BellIcon } from "./icons";
+import NotificationBell from "./NotificationBell";
 import { getCurrentUser } from "@/lib/account";
+import { listNotifications, unreadCount } from "@/lib/notifications";
 
 export default async function TopBar({
   accounts,
@@ -16,6 +17,9 @@ export default async function TopBar({
   const user = await getCurrentUser();
   const initial = (user?.name ?? userInitial ?? "T").charAt(0).toUpperCase();
   const avatar = user?.avatarUrl ?? null;
+  const [notifications, unread] = user
+    ? await Promise.all([listNotifications(user.id), unreadCount(user.id)])
+    : [[], 0];
 
   return (
     <header className="flex items-center justify-between gap-2 border-b border-line bg-surface px-4 py-3 sm:px-6">
@@ -25,12 +29,7 @@ export default async function TopBar({
       </div>
 
       <div className="flex items-center gap-3">
-        <button
-          className="flex h-9 w-9 items-center justify-center rounded-full text-muted hover:bg-black/[0.04]"
-          aria-label="Notifications"
-        >
-          <BellIcon size={18} />
-        </button>
+        <NotificationBell initial={notifications} initialUnread={unread} />
         <Link
           href="/settings"
           aria-label="Settings"
