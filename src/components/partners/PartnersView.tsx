@@ -225,8 +225,8 @@ export default function PartnersView({
                               p.stats.winRate >= p.stats.winRatePrev ? "text-profit" : "text-loss"
                             }
                           >
-                            {p.stats.winRate >= p.stats.winRatePrev ? "▲" : "▼"} prev{" "}
-                            {Math.round(p.stats.winRatePrev)}%
+                            {p.stats.winRate >= p.stats.winRatePrev ? "▲" : "▼"}{" "}
+                            {Math.abs(Math.round(p.stats.winRate - p.stats.winRatePrev))}% vs last wk
                           </span>
                         ) : undefined
                       }
