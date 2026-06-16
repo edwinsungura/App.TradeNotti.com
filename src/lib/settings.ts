@@ -47,17 +47,12 @@ export async function updateProfile(
   userId: string,
   input: ProfileInput,
 ): Promise<ProfileData> {
+  // Email is intentionally NOT editable — ignored even if supplied.
   const data: Record<string, unknown> = {};
   if (input.name !== undefined) {
     const name = input.name.trim();
     if (!name) throw new SettingsError("Name can't be empty.");
     data.name = name;
-  }
-  if (input.email !== undefined) {
-    const email = input.email.trim().toLowerCase();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
-      throw new SettingsError("Enter a valid email.");
-    data.email = email;
   }
   if (input.avatarUrl !== undefined) {
     if (input.avatarUrl && !input.avatarUrl.startsWith("data:image/"))

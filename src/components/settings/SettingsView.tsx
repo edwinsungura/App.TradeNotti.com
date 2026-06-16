@@ -1,9 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import type { ProfileData, ManagedAccount } from "@/lib/settings";
 import AccountModal from "./AccountModal";
-import { CheckIcon, PlusIcon, ChevronIcon, TrashIcon, ImageIcon } from "../icons";
+import { CheckIcon, PlusIcon, ChevronIcon, TrashIcon, ImageIcon, LogoutIcon } from "../icons";
 
 async function compress(file: File, max = 400, quality = 0.85): Promise<string> {
   const url = URL.createObjectURL(file);
@@ -64,8 +65,8 @@ export default function SettingsView({
   profile: ProfileData;
   accounts: ManagedAccount[];
 }) {
+  const router = useRouter();
   const [name, setName] = useState(initialProfile.name);
-  const [email, setEmail] = useState(initialProfile.email);
   const [avatar, setAvatar] = useState<string | null>(initialProfile.avatarUrl);
   const [profileStatus, setProfileStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [profileError, setProfileError] = useState<string | null>(null);
@@ -75,7 +76,9 @@ export default function SettingsView({
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [modal, setModal] = useState<{ mode: "create" | "edit"; account?: ManagedAccount } | null>(null);
 
-  const saveProfile = async (patch: { name?: string; email?: string; avatarUrl?: string | null }) => {
+  const signOut = () => router.push("/signin");
+
+  const saveProfile = async (patch: { name?: string; avatarUrl?: string | null }) => {
     setProfileStatus("saving");
     setProfileError(null);
     try {
@@ -189,10 +192,11 @@ export default function SettingsView({
                 <label className="block">
                   <span className="kicker mb-1 block">Email</span>
                   <input
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    onBlur={() => email !== initialProfile.email && saveProfile({ email })}
-                    className="w-full rounded-lg border border-line px-3 py-2.5 text-[14px] outline-none focus:border-accent/40"
+                    value={initialProfile.email}
+                    readOnly
+                    disabled
+                    title="Email can't be changed"
+                    className="w-full cursor-not-allowed rounded-lg border border-line bg-black/[0.02] px-3 py-2.5 text-[14px] text-muted outline-none"
                   />
                 </label>
               </div>
@@ -340,6 +344,16 @@ export default function SettingsView({
             </p>
           )}
         </section>
+
+        {/* Sign out */}
+        <div className="mt-5 flex justify-end">
+          <button
+            onClick={signOut}
+            className="flex items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-[13px] font-medium text-ink-soft transition-colors hover:border-loss/40 hover:bg-loss-soft hover:text-loss"
+          >
+            <LogoutIcon size={16} /> Sign out
+          </button>
+        </div>
       </div>
 
       {modal && (
