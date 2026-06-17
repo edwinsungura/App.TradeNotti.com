@@ -12,13 +12,11 @@ export default function ConnectBrokerModal({
   account,
   onClose,
   onDone,
-  onManual,
 }: {
   mode: "create" | "link";
   account?: ManagedAccount; // required for "link"
   onClose: () => void;
   onDone: (account: ManagedAccount) => void;
-  onManual?: () => void; // "add a manual account instead"
 }) {
   const [name, setName] = useState("");
   const [platform, setPlatform] = useState<"mt5" | "mt4">("mt5");
@@ -154,15 +152,6 @@ export default function ConnectBrokerModal({
           >
             {saving ? "Connecting…" : "Connect & import"}
           </button>
-
-          {mode === "create" && onManual && (
-            <button
-              onClick={onManual}
-              className="text-center text-[12.5px] text-muted hover:text-ink"
-            >
-              Add a manual account instead
-            </button>
-          )}
         </div>
       </div>
     </div>

@@ -465,10 +465,6 @@ export default function SettingsView({
           mode={connectState.mode}
           account={connectState.mode === "link" ? connectState.account : undefined}
           onClose={() => setConnectState(null)}
-          onManual={() => {
-            setConnectState(null);
-            setModal({ mode: "create" });
-          }}
           onDone={(account) => {
             setAccounts((prev) =>
               prev.some((a) => a.id === account.id)
