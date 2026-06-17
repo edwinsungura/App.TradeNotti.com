@@ -86,7 +86,9 @@ export default function SettingsView({
   const [accounts, setAccounts] = useState<ManagedAccount[]>(initialAccounts);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [modal, setModal] = useState<{ mode: "create" | "edit"; account?: ManagedAccount } | null>(null);
-  const [connectFor, setConnectFor] = useState<ManagedAccount | null>(null);
+  const [connectState, setConnectState] = useState<
+    { mode: "create" } | { mode: "link"; account: ManagedAccount } | null
+  >(null);
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [syncMsg, setSyncMsg] = useState<Record<string, string>>({});
 
@@ -309,7 +311,7 @@ export default function SettingsView({
               <h2 className="text-[15px] font-semibold">Connected</h2>
             </div>
             <button
-              onClick={() => setModal({ mode: "create" })}
+              onClick={() => setConnectState({ mode: "create" })}
               className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-[13px] font-medium text-white hover:bg-accent/90"
             >
               <PlusIcon size={15} /> Add account
@@ -365,7 +367,7 @@ export default function SettingsView({
                       </>
                     ) : (
                       <button
-                        onClick={() => setConnectFor(a)}
+                        onClick={() => setConnectState({ mode: "link", account: a })}
                         className="font-medium text-accent hover:underline"
                       >
                         Connect MetaTrader
@@ -404,7 +406,7 @@ export default function SettingsView({
                         ) : (
                           <button
                             onClick={() => {
-                              setConnectFor(a);
+                              setConnectState({ mode: "link", account: a });
                               setMenuOpen(null);
                             }}
                             className="block w-full rounded-md px-2.5 py-1.5 text-left text-[13px] text-ink-soft hover:bg-black/[0.04]"
@@ -458,16 +460,23 @@ export default function SettingsView({
         />
       )}
 
-      {connectFor && (
+      {connectState && (
         <ConnectBrokerModal
-          accountId={connectFor.id}
-          accountLabel={connectFor.label}
-          onClose={() => setConnectFor(null)}
-          onConnected={() => {
-            patchAccount(connectFor.id, { connected: true, syncStatus: "idle" });
-            const a = { ...connectFor, connected: true };
-            setConnectFor(null);
-            syncNow(a);
+          mode={connectState.mode}
+          account={connectState.mode === "link" ? connectState.account : undefined}
+          onClose={() => setConnectState(null)}
+          onManual={() => {
+            setConnectState(null);
+            setModal({ mode: "create" });
+          }}
+          onDone={(account) => {
+            setAccounts((prev) =>
+              prev.some((a) => a.id === account.id)
+                ? prev.map((a) => (a.id === account.id ? account : a))
+                : [...prev, account],
+            );
+            setConnectState(null);
+            syncNow(account);
           }}
         />
       )}

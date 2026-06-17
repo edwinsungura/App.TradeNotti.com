@@ -1,22 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { ManagedAccount } from "@/lib/settings";
 import { CloseIcon } from "../icons";
 
 const input =
   "w-full rounded-lg border border-line px-3 py-2.5 text-[14px] outline-none focus:border-accent/40";
 
 export default function ConnectBrokerModal({
-  accountId,
-  accountLabel,
+  mode,
+  account,
   onClose,
-  onConnected,
+  onDone,
+  onManual,
 }: {
-  accountId: string;
-  accountLabel: string;
+  mode: "create" | "link";
+  account?: ManagedAccount; // required for "link"
   onClose: () => void;
-  onConnected: () => void;
+  onDone: (account: ManagedAccount) => void;
+  onManual?: () => void; // "add a manual account instead"
 }) {
+  const [name, setName] = useState("");
   const [platform, setPlatform] = useState<"mt5" | "mt4">("mt5");
   const [login, setLogin] = useState("");
   const [server, setServer] = useState("");
@@ -34,14 +38,36 @@ export default function ConnectBrokerModal({
     setSaving(true);
     setError(null);
     try {
+      // In "create" mode we create the account first, then link the broker —
+      // so the user connects in a single step (no second connection).
+      let target: ManagedAccount;
+      if (mode === "create") {
+        const res = await fetch("/api/accounts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            label: name.trim() || `${platform.toUpperCase()} account`,
+            broker: platform === "mt4" ? "MetaTrader 4" : "MetaTrader 5",
+            currency: "USD",
+            type: "LIVE",
+          }),
+        });
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(j.error || "Could not create account.");
+        target = j.account;
+      } else {
+        target = account!;
+      }
+
       const res = await fetch("/api/broker/connect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accountId, login, server, password, platform }),
+        body: JSON.stringify({ accountId: target.id, login, server, password, platform }),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error || "Could not connect.");
-      onConnected();
+
+      onDone({ ...target, connected: true, brokerLogin: login, syncStatus: "idle" });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not connect.");
     } finally {
@@ -54,7 +80,9 @@ export default function ConnectBrokerModal({
       <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden />
       <div className="relative w-full rounded-t-2xl border border-line bg-surface p-6 shadow-xl sm:max-w-md sm:rounded-2xl">
         <div className="mb-1 flex items-center justify-between">
-          <h2 className="text-[15px] font-semibold">Connect MetaTrader</h2>
+          <h2 className="text-[15px] font-semibold">
+            {mode === "create" ? "Add account" : "Connect MetaTrader"}
+          </h2>
           <button
             onClick={onClose}
             aria-label="Close"
@@ -64,12 +92,24 @@ export default function ConnectBrokerModal({
           </button>
         </div>
         <p className="mb-4 text-[12.5px] text-muted">
-          Link <span className="font-medium text-ink-soft">{accountLabel}</span>{" "}
-          to auto-import trades. Use your <strong>investor (read-only) password</strong> —
-          TradeNotti can never place trades.
+          Connect your MetaTrader account to auto-import trades. Use your{" "}
+          <strong>investor (read-only) password</strong> — TradeNotti can never
+          place trades.
         </p>
 
         <div className="flex flex-col gap-3">
+          {mode === "create" && (
+            <label className="block">
+              <span className="kicker mb-1 block">Account name</span>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="My live account"
+                className={input}
+              />
+            </label>
+          )}
+
           <div>
             <span className="kicker mb-1 block">Platform</span>
             <div className="inline-flex rounded-lg bg-black/[0.04] p-0.5">
@@ -114,6 +154,15 @@ export default function ConnectBrokerModal({
           >
             {saving ? "Connecting…" : "Connect & import"}
           </button>
+
+          {mode === "create" && onManual && (
+            <button
+              onClick={onManual}
+              className="text-center text-[12.5px] text-muted hover:text-ink"
+            >
+              Add a manual account instead
+            </button>
+          )}
         </div>
       </div>
     </div>
