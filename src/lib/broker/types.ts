@@ -17,10 +17,30 @@ export interface BrokerPosition {
   openedAt: Date;
 }
 
+// A closed, round-trip trade pulled from broker history.
+export interface BrokerDeal {
+  externalId: string; // broker position id (one round trip)
+  symbol: string;
+  direction: BrokerDirection;
+  entry: number;
+  exit: number | null;
+  volume: number | null;
+  // Net realized P&L incl. commission + swap, in account currency.
+  pnl: number | null;
+  openedAt: Date;
+  closedAt: Date;
+}
+
 export interface BrokerProvider {
   readonly name: string;
-  // Returns currently OPEN positions for the linked account.
+  // Boot the broker terminal (on-demand). No-op for providers that don't need it.
+  deploy(): Promise<void>;
+  // Shut the terminal down so billing stops. Always safe to call.
+  undeploy(): Promise<void>;
+  // Currently OPEN positions for the linked account.
   getOpenPositions(): Promise<BrokerPosition[]>;
+  // Closed trades since `since` (null = full history backfill).
+  getClosedDeals(since: Date | null): Promise<BrokerDeal[]>;
 }
 
 // Account-level connection details passed to a provider factory.

@@ -2,7 +2,19 @@ import type { BrokerConnection, BrokerProvider } from "./types";
 import { MockProvider } from "./mock-provider";
 import { createMetaApiProvider } from "./metaapi-provider";
 
-export type { BrokerProvider, BrokerPosition, BrokerConnection } from "./types";
+export type {
+  BrokerProvider,
+  BrokerPosition,
+  BrokerDeal,
+  BrokerConnection,
+} from "./types";
+export { provisionMetaApiAccount } from "./metaapi-provider";
+
+export function brokerMode(): "metaapi" | "mock" {
+  return (process.env.BROKER_PROVIDER || "mock").toLowerCase() === "metaapi"
+    ? "metaapi"
+    : "mock";
+}
 
 // Resolves the broker provider for an account. Controlled by BROKER_PROVIDER:
 //   - "metaapi": live MT5 via MetaApi (falls back to mock if not configured)

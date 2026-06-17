@@ -1,21 +1,46 @@
-import type { BrokerConnection, BrokerPosition, BrokerProvider } from "./types";
+import type {
+  BrokerConnection,
+  BrokerDeal,
+  BrokerPosition,
+  BrokerProvider,
+} from "./types";
 
-// MetaTrader 5 (and MT4) live positions via MetaApi.cloud's REST API.
-// MetaApi is a cloud bridge to a real MT terminal — MT5 itself has no public
-// REST API, so a bridge is required when running off-Windows / in the cloud.
+// MetaTrader 4/5 live data via MetaApi.cloud (cloud-g2). MT itself has no public
+// REST API, so MetaApi runs a cloud terminal we deploy on-demand, read, then
+// undeploy (so we're only billed for the short sync window).
 //
-// Docs: https://metaapi.cloud/docs/client/restApi/
-// Endpoint used: GET /users/current/accounts/{accountId}/positions
+// Hosts:
+//   provisioning API — deploy/undeploy/state/provisioning (region-agnostic)
+//   client API       — positions/history (region-scoped)
+// Docs: https://metaapi.cloud/docs/
+
+const PROVISIONING_BASE =
+  "https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai";
+
 interface MetaApiRawPosition {
   id: string | number;
   symbol: string;
-  type: string; // "POSITION_TYPE_BUY" | "POSITION_TYPE_SELL"
+  type: string; // POSITION_TYPE_BUY | POSITION_TYPE_SELL
   openPrice: number;
   stopLoss?: number;
   takeProfit?: number;
   volume?: number;
   profit?: number;
-  time: string; // ISO
+  time: string;
+}
+
+interface MetaApiRawDeal {
+  id: string | number;
+  positionId?: string | number;
+  symbol?: string;
+  type?: string; // DEAL_TYPE_BUY | DEAL_TYPE_SELL
+  entryType?: string; // DEAL_ENTRY_IN | DEAL_ENTRY_OUT | DEAL_ENTRY_INOUT
+  price?: number;
+  volume?: number;
+  profit?: number;
+  commission?: number;
+  swap?: number;
+  time: string;
 }
 
 export class MetaApiProvider implements BrokerProvider {
@@ -27,45 +52,129 @@ export class MetaApiProvider implements BrokerProvider {
     private readonly region: string = "new-york",
   ) {}
 
-  private get baseUrl(): string {
-    // Region-scoped MetaApi MetaTrader client API host.
+  private get clientBase(): string {
     return `https://mt-client-api-v1.${this.region}.agiliumtrade.ai`;
+  }
+
+  private headers() {
+    return { "auth-token": this.token, Accept: "application/json" } as const;
+  }
+
+  async deploy(): Promise<void> {
+    await fetch(
+      `${PROVISIONING_BASE}/users/current/accounts/${this.accountId}/deploy`,
+      { method: "POST", headers: this.headers(), cache: "no-store" },
+    );
+    await this.waitConnected();
+  }
+
+  async undeploy(): Promise<void> {
+    // Best-effort: never let a teardown error mask the real result.
+    try {
+      await fetch(
+        `${PROVISIONING_BASE}/users/current/accounts/${this.accountId}/undeploy`,
+        { method: "POST", headers: this.headers(), cache: "no-store" },
+      );
+    } catch (e) {
+      console.warn("[metaapi] undeploy failed:", e);
+    }
+  }
+
+  // Poll until the terminal is deployed and connected to the broker (or timeout).
+  private async waitConnected(timeoutMs = 90_000): Promise<void> {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      try {
+        const res = await fetch(
+          `${PROVISIONING_BASE}/users/current/accounts/${this.accountId}`,
+          { headers: this.headers(), cache: "no-store" },
+        );
+        if (res.ok) {
+          const a = (await res.json()) as {
+            state?: string;
+            connectionStatus?: string;
+          };
+          if (a.state === "DEPLOYED" && a.connectionStatus === "CONNECTED") return;
+        }
+      } catch {
+        /* keep polling */
+      }
+      await new Promise((r) => setTimeout(r, 3000));
+    }
+    throw new Error("MetaApi terminal did not connect in time.");
   }
 
   async getOpenPositions(): Promise<BrokerPosition[]> {
     const res = await fetch(
-      `${this.baseUrl}/users/current/accounts/${this.accountId}/positions`,
-      {
-        headers: { "auth-token": this.token, Accept: "application/json" },
-        // Always hit the broker; never serve a stale cache here.
-        cache: "no-store",
-      },
+      `${this.clientBase}/users/current/accounts/${this.accountId}/positions`,
+      { headers: this.headers(), cache: "no-store" },
     );
-
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      throw new Error(
-        `MetaApi positions request failed (${res.status}): ${body.slice(0, 200)}`,
-      );
-    }
-
+    if (!res.ok) throw await apiError(res, "positions");
     const raw = (await res.json()) as MetaApiRawPosition[];
-    return raw.map((p) => normalizePosition(p));
+    return raw.map((p) => ({
+      externalId: String(p.id),
+      symbol: normalizeSymbol(p.symbol),
+      direction: (p.type === "POSITION_TYPE_SELL" ? "SHORT" : "LONG") as
+        | "LONG"
+        | "SHORT",
+      entry: p.openPrice,
+      stopLoss: p.stopLoss ?? null,
+      takeProfit: p.takeProfit ?? null,
+      volume: p.volume ?? null,
+      pnl: p.profit ?? null,
+      openedAt: new Date(p.time),
+    }));
+  }
+
+  async getClosedDeals(since: Date | null): Promise<BrokerDeal[]> {
+    const start = since ?? new Date(Date.now() - 365 * 864e5); // 1y backfill
+    const end = new Date(Date.now() + 60_000);
+    const res = await fetch(
+      `${this.clientBase}/users/current/accounts/${this.accountId}/history-deals/time/${start.toISOString()}/${end.toISOString()}`,
+      { headers: this.headers(), cache: "no-store" },
+    );
+    if (!res.ok) throw await apiError(res, "history-deals");
+    const deals = (await res.json()) as MetaApiRawDeal[];
+    return pairDeals(deals);
   }
 }
 
-function normalizePosition(p: MetaApiRawPosition): BrokerPosition {
-  return {
-    externalId: String(p.id),
-    symbol: normalizeSymbol(p.symbol),
-    direction: p.type === "POSITION_TYPE_SELL" ? "SHORT" : "LONG",
-    entry: p.openPrice,
-    stopLoss: p.stopLoss ?? null,
-    takeProfit: p.takeProfit ?? null,
-    volume: p.volume ?? null,
-    pnl: p.profit ?? null,
-    openedAt: new Date(p.time),
-  };
+// Group raw MT deals into closed round-trip trades, keyed by positionId.
+function pairDeals(deals: MetaApiRawDeal[]): BrokerDeal[] {
+  const byPos = new Map<string, MetaApiRawDeal[]>();
+  for (const d of deals) {
+    if (d.positionId == null) continue;
+    const key = String(d.positionId);
+    const arr = byPos.get(key) ?? [];
+    arr.push(d);
+    byPos.set(key, arr);
+  }
+
+  const out: BrokerDeal[] = [];
+  for (const [positionId, group] of byPos) {
+    group.sort((a, b) => +new Date(a.time) - +new Date(b.time));
+    const entry = group.find((d) => d.entryType === "DEAL_ENTRY_IN") ?? group[0];
+    const exits = group.filter((d) => d.entryType === "DEAL_ENTRY_OUT");
+    if (exits.length === 0) continue; // still open — handled as a position
+
+    const last = exits[exits.length - 1];
+    const net = group.reduce(
+      (s, d) => s + (d.profit ?? 0) + (d.commission ?? 0) + (d.swap ?? 0),
+      0,
+    );
+    out.push({
+      externalId: positionId,
+      symbol: normalizeSymbol(entry.symbol ?? last.symbol ?? ""),
+      direction: entry.type === "DEAL_TYPE_SELL" ? "SHORT" : "LONG",
+      entry: entry.price ?? 0,
+      exit: last.price ?? null,
+      volume: entry.volume ?? null,
+      pnl: Math.round(net * 100) / 100,
+      openedAt: new Date(entry.time),
+      closedAt: new Date(last.time),
+    });
+  }
+  return out;
 }
 
 // "EURUSD" -> "EUR/USD" for common 6-char FX symbols; otherwise pass through.
@@ -75,14 +184,56 @@ function normalizeSymbol(symbol: string): string {
   return symbol;
 }
 
+async function apiError(res: Response, what: string): Promise<Error> {
+  const body = await res.text().catch(() => "");
+  return new Error(`MetaApi ${what} failed (${res.status}): ${body.slice(0, 200)}`);
+}
+
 // Factory used by the broker registry; returns null when not configured.
 export function createMetaApiProvider(
   connection: BrokerConnection,
 ): MetaApiProvider | null {
   const token = process.env.METAAPI_TOKEN;
-  const accountId =
-    connection.metaApiAccountId || process.env.METAAPI_ACCOUNT_ID;
+  const accountId = connection.metaApiAccountId || process.env.METAAPI_ACCOUNT_ID;
   const region = process.env.METAAPI_REGION || "new-york";
   if (!token || !accountId) return null;
   return new MetaApiProvider(token, accountId, region);
+}
+
+/**
+ * Provisions a MetaApi (cloud-g2) account from MT credentials and returns its
+ * id. Credentials are sent to MetaApi and NOT stored by us. Use the investor
+ * (read-only) password so the link can never place trades.
+ */
+export async function provisionMetaApiAccount(creds: {
+  name: string;
+  login: string;
+  password: string;
+  server: string;
+  platform?: "mt4" | "mt5";
+}): Promise<string> {
+  const token = process.env.METAAPI_TOKEN;
+  if (!token) throw new Error("METAAPI_TOKEN is not configured.");
+  const region = process.env.METAAPI_REGION || "new-york";
+
+  const res = await fetch(`${PROVISIONING_BASE}/users/current/accounts`, {
+    method: "POST",
+    headers: { "auth-token": token, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: creds.name,
+      login: creds.login,
+      password: creds.password,
+      server: creds.server,
+      platform: creds.platform ?? "mt5",
+      type: "cloud-g2",
+      magic: 0,
+      region,
+      application: "MetaApi",
+      keepHistoryDaysOnDisk: 30,
+    }),
+    cache: "no-store",
+  });
+  if (!res.ok) throw await apiError(res, "provisioning");
+  const data = (await res.json()) as { id: string };
+  return data.id;
 }

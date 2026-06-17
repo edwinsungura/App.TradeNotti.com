@@ -18,6 +18,10 @@ export interface ManagedAccount {
   type: AccountType;
   balance: number;
   archived: boolean;
+  connected: boolean;
+  brokerLogin: string | null;
+  lastSyncedAt: string | null;
+  syncStatus: string;
 }
 
 export interface ProfileInput {
@@ -86,6 +90,10 @@ export async function listManagedAccounts(userId: string): Promise<ManagedAccoun
     type: a.type,
     balance: Number(a.balance),
     archived: a.archived,
+    connected: !!a.metaApiAccountId,
+    brokerLogin: a.brokerLogin,
+    lastSyncedAt: a.lastSyncedAt ? a.lastSyncedAt.toISOString() : null,
+    syncStatus: a.syncStatus,
   }));
 }
 
@@ -115,6 +123,10 @@ export async function createAccount(
     type: a.type,
     balance: Number(a.balance),
     archived: a.archived,
+    connected: !!a.metaApiAccountId,
+    brokerLogin: a.brokerLogin,
+    lastSyncedAt: a.lastSyncedAt ? a.lastSyncedAt.toISOString() : null,
+    syncStatus: a.syncStatus,
   };
 }
 
@@ -150,6 +162,10 @@ export async function updateAccount(
     type: a.type,
     balance: Number(a.balance),
     archived: a.archived,
+    connected: !!a.metaApiAccountId,
+    brokerLogin: a.brokerLogin,
+    lastSyncedAt: a.lastSyncedAt ? a.lastSyncedAt.toISOString() : null,
+    syncStatus: a.syncStatus,
   };
 }
 

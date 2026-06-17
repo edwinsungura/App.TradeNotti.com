@@ -1,9 +1,13 @@
-import type { BrokerPosition, BrokerProvider } from "./types";
+import type { BrokerDeal, BrokerPosition, BrokerProvider } from "./types";
 
 // Renders the Today page without broker credentials. Returns a small set of
 // open positions with lightly randomized floating P&L so the page feels live.
 export class MockProvider implements BrokerProvider {
   readonly name = "mock";
+
+  // No real terminal — deploy/undeploy are no-ops.
+  async deploy(): Promise<void> {}
+  async undeploy(): Promise<void> {}
 
   async getOpenPositions(): Promise<BrokerPosition[]> {
     const now = Date.now();
@@ -44,5 +48,11 @@ export class MockProvider implements BrokerProvider {
         openedAt: new Date(now - 1000 * 60 * 60 * 4), // ~4h ago
       },
     ];
+  }
+
+  // Closed history comes from the seed in mock mode — return nothing here so we
+  // never duplicate seeded trades.
+  async getClosedDeals(): Promise<BrokerDeal[]> {
+    return [];
   }
 }

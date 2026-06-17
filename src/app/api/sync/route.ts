@@ -3,8 +3,12 @@ import { getActiveAccount } from "@/lib/account";
 import { syncAccountTrades } from "@/lib/broker-sync";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 120;
 
-// POST /api/sync[?accountId=...] — reconcile open positions from the broker.
+// Minimum gap between manual syncs (cost control — avoids deploy churn).
+const COOLDOWN_MS = 60_000;
+
+// POST /api/sync[?accountId=...] — on-demand broker sync for one account.
 export async function POST(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const accountId = searchParams.get("accountId") ?? undefined;
@@ -12,6 +16,22 @@ export async function POST(req: NextRequest) {
   const account = await getActiveAccount(accountId);
   if (!account) {
     return NextResponse.json({ error: "No account found" }, { status: 404 });
+  }
+
+  if (account.syncStatus === "syncing") {
+    return NextResponse.json({ error: "Sync already in progress." }, { status: 409 });
+  }
+  if (
+    account.lastSyncedAt &&
+    Date.now() - account.lastSyncedAt.getTime() < COOLDOWN_MS
+  ) {
+    const wait = Math.ceil(
+      (COOLDOWN_MS - (Date.now() - account.lastSyncedAt.getTime())) / 1000,
+    );
+    return NextResponse.json(
+      { error: `Just synced — try again in ${wait}s.` },
+      { status: 429 },
+    );
   }
 
   try {
