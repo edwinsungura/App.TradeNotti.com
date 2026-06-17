@@ -226,6 +226,7 @@ export async function provisionMetaApiAccount(creds: {
       server: creds.server,
       platform: creds.platform ?? "mt5",
       type: "cloud-g2",
+      reliability: "regular", // cost control — high reliability isn't needed for periodic sync
       magic: 0,
       region,
       application: "MetaApi",
