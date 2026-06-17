@@ -247,6 +247,12 @@ export const LogoutIcon = (p: IconProps) => (
   </Base>
 );
 
+export const RefreshIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" />
+  </Base>
+);
+
 export const ImageIcon = (p: IconProps) => (
   <Base {...p}>
     <rect x="3" y="3" width="18" height="18" rx="2" />

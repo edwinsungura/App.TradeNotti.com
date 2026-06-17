@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ArrowRightIcon } from "../icons";
+import { ArrowRightIcon, RefreshIcon } from "../icons";
 import type { TradeView } from "@/lib/trades";
 import {
   formatPrice,
@@ -60,29 +60,50 @@ export default function TodaysTrades({
 }) {
   const router = useRouter();
   const [trades, setTrades] = useState(initialTrades);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState<string | null>(null);
 
-  // Poll the broker-synced open trades to keep floating P&L fresh.
+  // Read-only refresh of open trades from the DB (no broker deploy — cheap).
+  const refetch = async () => {
+    try {
+      const res = await fetch(
+        `/api/trades?status=open&accountId=${accountId}`,
+        { cache: "no-store" },
+      );
+      if (!res.ok) return;
+      const data = (await res.json()) as { trades: TradeView[] };
+      setTrades(data.trades);
+    } catch {
+      /* keep last-known on transient errors */
+    }
+  };
+
+  // Light poll of the DB so a background (cron) sync shows up without reload.
+  // This does NOT hit the broker — actual broker syncs are twice-daily + manual.
   useEffect(() => {
-    let cancelled = false;
-    const tick = async () => {
-      try {
-        const res = await fetch(
-          `/api/trades?status=open&sync=1&accountId=${accountId}`,
-          { cache: "no-store" },
-        );
-        if (!res.ok) return;
-        const data = (await res.json()) as { trades: TradeView[] };
-        if (!cancelled) setTrades(data.trades);
-      } catch {
-        /* keep last-known on transient errors */
-      }
-    };
-    const id = setInterval(tick, POLL_MS);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
+    const id = setInterval(refetch, POLL_MS);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accountId]);
+
+  // Manual on-demand broker sync (cooldowned server-side).
+  const syncNow = async () => {
+    setSyncing(true);
+    setSyncMsg(null);
+    try {
+      const res = await fetch(`/api/sync?accountId=${accountId}`, { method: "POST" });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error || "Sync failed");
+      await refetch();
+      router.refresh();
+      setSyncMsg("Synced");
+      setTimeout(() => setSyncMsg(null), 2500);
+    } catch (e) {
+      setSyncMsg(e instanceof Error ? e.message : "Sync failed");
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   return (
     <section className="rounded-2xl border border-line bg-surface p-6">
@@ -91,12 +112,22 @@ export default function TodaysTrades({
           <div className="kicker mb-1">Logged today</div>
           <h2 className="text-[15px] font-semibold">Today&apos;s trades</h2>
         </div>
-        <Link
-          href="/journal"
-          className="flex items-center gap-1.5 text-[13px] text-muted hover:text-ink"
-        >
-          Open journal <ArrowRightIcon size={14} />
-        </Link>
+        <div className="flex items-center gap-3">
+          {syncMsg && <span className="text-[12px] text-faint">{syncMsg}</span>}
+          <button
+            onClick={syncNow}
+            disabled={syncing}
+            className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-[13px] font-medium text-ink-soft transition-colors hover:bg-black/[0.04] disabled:opacity-60"
+          >
+            <RefreshIcon size={14} /> {syncing ? "Syncing…" : "Sync now"}
+          </button>
+          <Link
+            href="/journal"
+            className="flex items-center gap-1.5 text-[13px] text-muted hover:text-ink"
+          >
+            Open journal <ArrowRightIcon size={14} />
+          </Link>
+        </div>
       </div>
 
       {trades.length === 0 ? (
