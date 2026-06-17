@@ -7,11 +7,13 @@ import type {
   DayTrade,
   Range,
 } from "@/lib/analytics";
+import type { PerformanceData } from "@/lib/resources";
 import { formatMoney, formatR } from "@/lib/format";
 import EquityCurve from "./EquityCurve";
 import WinLossDonut from "./WinLossDonut";
 import PerformanceCalendar from "./PerformanceCalendar";
 import DayTradesModal from "./DayTradesModal";
+import PerformancePanel from "../resources/PerformancePanel";
 import { ArrowRightIcon } from "../icons";
 
 const RANGES: { id: Range; label: string }[] = [
@@ -64,10 +66,12 @@ const legendDot = (color: string) => (
 export default function AnalyticsView({
   initial,
   initialCalendar,
+  performance,
   accountId,
 }: {
   initial: AnalyticsData;
   initialCalendar: CalendarData;
+  performance: PerformanceData;
   accountId: string;
 }) {
   const [data, setData] = useState<AnalyticsData>(initial);
@@ -283,6 +287,10 @@ export default function AnalyticsView({
         </section>
 
         <PerformanceCalendar initial={initialCalendar} accountId={accountId} />
+
+        <div className="mt-5">
+          <PerformancePanel accountId={accountId} initial={performance} />
+        </div>
       </div>
 
       {openSetup && (

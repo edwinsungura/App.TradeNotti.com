@@ -103,7 +103,7 @@ export default function ResourcesView({
                 selected === "performance" ? "bg-accent-bg" : "hover:bg-black/[0.03]"
               }`}
             >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-white">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-line text-ink">
                 <AnalyticsIcon size={16} />
               </span>
               <span className="min-w-0">

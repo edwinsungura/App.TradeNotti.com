@@ -6,6 +6,7 @@ import {
   getCurrentUser,
 } from "@/lib/account";
 import { getAnalytics, getCalendar } from "@/lib/analytics";
+import { getPerformance } from "@/lib/resources";
 
 export const dynamic = "force-dynamic";
 
@@ -31,9 +32,10 @@ export default async function AnalyticsPage({
   }
 
   const now = new Date();
-  const [analytics, calendar] = await Promise.all([
+  const [analytics, calendar, performance] = await Promise.all([
     getAnalytics(account.id, "month"),
     getCalendar(account.id, now.getUTCFullYear(), now.getUTCMonth()),
+    getPerformance(account.id, "monthly"),
   ]);
 
   const initial = (user?.name ?? "T").charAt(0).toUpperCase();
@@ -54,6 +56,7 @@ export default async function AnalyticsPage({
       <AnalyticsView
         initial={analytics}
         initialCalendar={calendar}
+        performance={performance}
         accountId={account.id}
       />
     </>
