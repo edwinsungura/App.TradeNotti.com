@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import type { DocSummary, DocData, PerformanceData } from "@/lib/resources";
-import PerformancePanel from "./PerformancePanel";
+import type { DocSummary, DocData } from "@/lib/resources";
 import DocPanel from "./DocPanel";
-import { AnalyticsIcon, JournalIcon, PlusIcon } from "../icons";
+import { JournalIcon, PlusIcon } from "../icons";
 
 function updatedLabel(iso: string): string {
   const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
@@ -18,20 +17,17 @@ function updatedLabel(iso: string): string {
 
 export default function ResourcesView({
   initialDocs,
-  performance,
-  accountId,
 }: {
   initialDocs: DocSummary[];
-  performance: PerformanceData;
-  accountId: string;
 }) {
   const [docs, setDocs] = useState<DocSummary[]>(initialDocs);
-  const [selected, setSelected] = useState<string>("performance");
+  const [selected, setSelected] = useState<string | null>(initialDocs[0]?.id ?? null);
   const [doc, setDoc] = useState<DocData | null>(null);
   const [creating, setCreating] = useState(false);
 
   const openDoc = async (id: string) => {
     setSelected(id);
+    setDoc(null);
     const res = await fetch(`/api/resources/${id}`, { cache: "no-store" });
     if (res.ok) {
       const { doc } = await res.json();
@@ -64,9 +60,12 @@ export default function ResourcesView({
     );
 
   const onDocDelete = (id: string) => {
-    setDocs((prev) => prev.filter((d) => d.id !== id));
+    setDocs((prev) => {
+      const next = prev.filter((d) => d.id !== id);
+      setSelected(next[0]?.id ?? null);
+      return next;
+    });
     setDoc(null);
-    setSelected("performance");
   };
 
   return (
@@ -94,60 +93,55 @@ export default function ResourcesView({
           <aside className="rounded-2xl border border-line bg-surface p-2.5">
             <div className="kicker px-2 py-2">Documents</div>
 
-            <button
-              onClick={() => {
-                setSelected("performance");
-                setDoc(null);
-              }}
-              className={`flex w-full items-start gap-3 rounded-xl px-2.5 py-2.5 text-left transition-colors ${
-                selected === "performance" ? "bg-accent-bg" : "hover:bg-black/[0.03]"
-              }`}
-            >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-line text-ink">
-                <AnalyticsIcon size={16} />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-[13.5px] font-semibold text-ink">
-                  Trading performance
-                </span>
-                <span className="block text-[11.5px] text-faint">
-                  Auto-updated · live
-                </span>
-              </span>
-            </button>
-
-            {docs.map((d) => (
-              <button
-                key={d.id}
-                onClick={() => openDoc(d.id)}
-                className={`flex w-full items-start gap-3 rounded-xl px-2.5 py-2.5 text-left transition-colors ${
-                  selected === d.id ? "bg-accent-bg" : "hover:bg-black/[0.03]"
-                }`}
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-line text-ink-soft">
-                  <JournalIcon size={15} />
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-[13.5px] font-medium text-ink">
-                    {d.title || "Untitled"}
+            {docs.length === 0 ? (
+              <p className="px-2.5 py-3 text-[13px] text-faint">
+                No documents yet. Create your first one.
+              </p>
+            ) : (
+              docs.map((d) => (
+                <button
+                  key={d.id}
+                  onClick={() => openDoc(d.id)}
+                  className={`flex w-full items-start gap-3 rounded-xl px-2.5 py-2.5 text-left transition-colors ${
+                    selected === d.id ? "bg-accent-bg" : "hover:bg-black/[0.03]"
+                  }`}
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-line text-ink-soft">
+                    <JournalIcon size={15} />
                   </span>
-                  <span className="block text-[11.5px] text-faint">
-                    Updated {updatedLabel(d.updatedAt)}
+                  <span className="min-w-0">
+                    <span className="block truncate text-[13.5px] font-medium text-ink">
+                      {d.title || "Untitled"}
+                    </span>
+                    <span className="block text-[11.5px] text-faint">
+                      Updated {updatedLabel(d.updatedAt)}
+                    </span>
                   </span>
-                </span>
-              </button>
-            ))}
+                </button>
+              ))
+            )}
           </aside>
 
           {/* Detail pane */}
           <div>
-            {selected === "performance" ? (
-              <PerformancePanel accountId={accountId} initial={performance} />
-            ) : doc ? (
+            {selected && doc ? (
               <DocPanel doc={doc} onSaved={onDocSaved} onDelete={onDocDelete} />
-            ) : (
+            ) : selected ? (
               <section className="rounded-2xl border border-line bg-surface p-10 text-center text-sm text-faint">
                 Loading…
+              </section>
+            ) : (
+              <section className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-line p-14 text-center">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-line text-faint">
+                  <JournalIcon size={20} />
+                </span>
+                <p className="text-[14px] font-medium text-ink">No document selected</p>
+                <button
+                  onClick={newDoc}
+                  className="rounded-lg bg-accent px-3.5 py-2 text-[13px] font-medium text-white hover:bg-accent/90"
+                >
+                  Create a document
+                </button>
               </section>
             )}
           </div>

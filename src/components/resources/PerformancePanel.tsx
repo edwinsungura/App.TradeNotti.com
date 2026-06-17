@@ -55,7 +55,6 @@ export default function PerformancePanel({
     <section className="rounded-2xl border border-line bg-surface p-6">
       <div className="mb-4 flex items-start justify-between">
         <div>
-          <div className="kicker mb-1">Auto-updated · live</div>
           <h2 className="text-[17px] font-semibold">Trading performance</h2>
         </div>
         <button

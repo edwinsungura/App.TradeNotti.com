@@ -5,7 +5,7 @@ import {
   getActiveAccount,
   getCurrentUser,
 } from "@/lib/account";
-import { listDocs, getPerformance } from "@/lib/resources";
+import { listDocs } from "@/lib/resources";
 
 export const dynamic = "force-dynamic";
 
@@ -30,10 +30,7 @@ export default async function ResourcesPage({
     );
   }
 
-  const [docs, performance] = await Promise.all([
-    listDocs(user.id),
-    getPerformance(account.id, "monthly"),
-  ]);
+  const docs = await listDocs(user.id);
 
   const initial = (user.name ?? "T").charAt(0).toUpperCase();
 
@@ -50,11 +47,7 @@ export default async function ResourcesPage({
         activeId={account.id}
         userInitial={initial}
       />
-      <ResourcesView
-        initialDocs={docs}
-        performance={performance}
-        accountId={account.id}
-      />
+      <ResourcesView initialDocs={docs} />
     </>
   );
 }
