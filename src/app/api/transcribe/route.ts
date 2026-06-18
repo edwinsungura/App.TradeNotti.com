@@ -26,7 +26,10 @@ export async function POST(req: NextRequest) {
   const upstream = new FormData();
   const filename = (audio as File).name || "note.webm";
   upstream.append("file", audio, filename);
-  upstream.append("model", process.env.OPENAI_TRANSCRIBE_MODEL || "whisper-1");
+  upstream.append(
+    "model",
+    process.env.OPENAI_TRANSCRIBE_MODEL || "gpt-4o-mini-transcribe",
+  );
   upstream.append("response_format", "json");
 
   try {
