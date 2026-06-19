@@ -8,6 +8,7 @@ import { DirBadge, GradePill, TagChip, signedClass } from "./cells";
 import FilterMenu, {
   EMPTY_FILTERS,
   formatRFilter,
+  formatDateRange,
   type Filters,
 } from "./FilterMenu";
 
@@ -44,6 +45,10 @@ function applyFilters(rows: JournalRow[], f: Filters): JournalRow[] {
       if (op === "lte" && !(t.rMultiple <= value)) return false;
     }
     if (!withinRange(t.openedAt, f.dateRange)) return false;
+    if (f.dateFrom && f.dateTo) {
+      const day = t.openedAt.slice(0, 10); // yyyy-mm-dd
+      if (day < f.dateFrom || day > f.dateTo) return false;
+    }
     return true;
   });
 }
@@ -123,6 +128,12 @@ export default function JournalView({
             <Chip
               label={dateLabel[filters.dateRange]}
               onRemove={() => setFilters({ ...filters, dateRange: null })}
+            />
+          )}
+          {filters.dateFrom && filters.dateTo && (
+            <Chip
+              label={formatDateRange(filters.dateFrom, filters.dateTo)}
+              onRemove={() => setFilters({ ...filters, dateFrom: null, dateTo: null })}
             />
           )}
           {filters.outcome && (

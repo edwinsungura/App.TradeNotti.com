@@ -6,7 +6,12 @@ import type {
   ScreenshotKind,
 } from "@prisma/client";
 
-export type Range = "week" | "month" | "ytd" | "all";
+export type Range = "week" | "month" | "ytd" | "all" | "custom";
+
+export interface CustomRange {
+  from: string; // yyyy-mm-dd
+  to: string; // yyyy-mm-dd
+}
 
 export interface SetupStat {
   name: string; // the tag, treated as a "setup"
@@ -66,11 +71,36 @@ function monthYearLabel(d: Date): string {
     .toUpperCase();
 }
 
-function resolveWindows(range: Range, now: Date): {
+function rangeLabel(from: string, to: string): string {
+  const fmt = (s: string) =>
+    new Date(`${s}T00:00:00Z`).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+  return `${fmt(from)} – ${fmt(to)}`.toUpperCase();
+}
+
+function resolveWindows(
+  range: Range,
+  now: Date,
+  custom?: CustomRange,
+): {
   current: Window;
   previous: Window | null;
   label: string;
 } {
+  if (range === "custom" && custom) {
+    const start = new Date(`${custom.from}T00:00:00.000Z`);
+    const end = new Date(`${custom.to}T23:59:59.999Z`);
+    const span = end.getTime() - start.getTime();
+    return {
+      current: { start, end },
+      previous: { start: new Date(start.getTime() - span), end: start },
+      label: rangeLabel(custom.from, custom.to),
+    };
+  }
   switch (range) {
     case "week": {
       const start = new Date(now.getTime() - 7 * 864e5);
@@ -172,6 +202,7 @@ function statsFor(closed: TradeWithTags[], w: Window): WindowStats {
 export async function getAnalytics(
   accountId: string,
   range: Range,
+  custom?: CustomRange,
 ): Promise<AnalyticsData> {
   const account = await prisma.account.findUnique({
     where: { id: accountId },
@@ -187,7 +218,7 @@ export async function getAnalytics(
   const open = trades.filter((t) => t.status === "OPEN");
 
   const now = new Date();
-  const { current, previous, label } = resolveWindows(range, now);
+  const { current, previous, label } = resolveWindows(range, now, custom);
 
   const cur = statsFor(closed, current);
   const prev = previous ? statsFor(closed, previous) : null;

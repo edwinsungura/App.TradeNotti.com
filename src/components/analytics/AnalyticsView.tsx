@@ -14,7 +14,8 @@ import WinLossDonut from "./WinLossDonut";
 import PerformanceCalendar from "./PerformanceCalendar";
 import DayTradesModal from "./DayTradesModal";
 import PerformancePanel from "../resources/PerformancePanel";
-import { ArrowRightIcon } from "../icons";
+import DateRangePicker from "../DateRangePicker";
+import { ArrowRightIcon, CalendarIcon } from "../icons";
 
 const RANGES: { id: Range; label: string }[] = [
   { id: "week", label: "Week" },
@@ -77,6 +78,8 @@ export default function AnalyticsView({
   const [data, setData] = useState<AnalyticsData>(initial);
   const [range, setRange] = useState<Range>(initial.range);
   const [loading, setLoading] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
+  const [custom, setCustom] = useState<{ from: string; to: string } | null>(null);
 
   // Setup-detail modal (trades carrying a given tag in the current range).
   const [openSetup, setOpenSetup] = useState<string | null>(null);
@@ -104,13 +107,30 @@ export default function AnalyticsView({
   };
 
   const changeRange = async (next: Range) => {
-    if (next === range) return;
+    setShowPicker(false);
+    if (next === range && next !== "custom") return;
     setRange(next);
     setLoading(true);
     try {
       const res = await fetch(`/api/analytics?range=${next}&accountId=${accountId}`, {
         cache: "no-store",
       });
+      if (res.ok) setData(await res.json());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const applyCustom = async (from: string, to: string) => {
+    setShowPicker(false);
+    setRange("custom");
+    setCustom({ from, to });
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `/api/analytics?range=custom&from=${from}&to=${to}&accountId=${accountId}`,
+        { cache: "no-store" },
+      );
       if (res.ok) setData(await res.json());
     } finally {
       setLoading(false);
@@ -129,24 +149,51 @@ export default function AnalyticsView({
             <div className="kicker mb-1">Performance · {data.periodLabel}</div>
             <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Analytics</h1>
           </div>
-          <div
-            className={`inline-flex rounded-lg bg-black/[0.04] p-0.5 ${
-              loading ? "opacity-60" : ""
-            }`}
-          >
-            {RANGES.map((r) => (
+          <div className={`flex items-center gap-2 ${loading ? "opacity-60" : ""}`}>
+            <div className="inline-flex rounded-lg bg-black/[0.04] p-0.5">
+              {RANGES.map((r) => (
+                <button
+                  key={r.id}
+                  onClick={() => changeRange(r.id)}
+                  className={`rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                    range === r.id
+                      ? "bg-surface text-ink shadow-sm"
+                      : "text-muted hover:text-ink"
+                  }`}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Custom date range */}
+            <div className="relative">
               <button
-                key={r.id}
-                onClick={() => changeRange(r.id)}
-                className={`rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors ${
-                  range === r.id
-                    ? "bg-surface text-ink shadow-sm"
-                    : "text-muted hover:text-ink"
+                onClick={() => setShowPicker((s) => !s)}
+                className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                  range === "custom"
+                    ? "border-accent/40 bg-accent-bg text-accent"
+                    : "border-line text-ink-soft hover:bg-black/[0.04]"
                 }`}
               >
-                {r.label}
+                <CalendarIcon size={14} />
+                {range === "custom" && custom ? data.periodLabel : "Custom"}
               </button>
-            ))}
+              {showPicker && (
+                <div className="absolute right-0 z-30 mt-2 rounded-xl border border-line bg-surface shadow-lg shadow-black/5">
+                  <DateRangePicker
+                    from={custom?.from ?? null}
+                    to={custom?.to ?? null}
+                    onApply={applyCustom}
+                    onClear={() => {
+                      setCustom(null);
+                      setShowPicker(false);
+                      changeRange("month");
+                    }}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

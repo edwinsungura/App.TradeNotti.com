@@ -12,6 +12,7 @@ import {
   ChevronIcon,
   CheckIcon,
 } from "../icons";
+import DateRangePicker from "../DateRangePicker";
 
 export interface Filters {
   direction: TradeDirection | null;
@@ -21,6 +22,8 @@ export interface Filters {
   tags: string[];
   rMultiple: { op: "gte" | "lte"; value: number } | null;
   dateRange: "1d" | "7d" | "30d" | null;
+  dateFrom: string | null; // custom range start (yyyy-mm-dd)
+  dateTo: string | null; // custom range end (yyyy-mm-dd)
 }
 
 // Selectable R thresholds: ±1R … ±10R.
@@ -38,6 +41,8 @@ export const EMPTY_FILTERS: Filters = {
   tags: [],
   rMultiple: null,
   dateRange: null,
+  dateFrom: null,
+  dateTo: null,
 };
 
 export function countActive(f: Filters): number {
@@ -47,9 +52,21 @@ export function countActive(f: Filters): number {
     (f.grade ? 1 : 0) +
     (f.rMultiple ? 1 : 0) +
     (f.dateRange ? 1 : 0) +
+    (f.dateFrom && f.dateTo ? 1 : 0) +
     f.pairs.length +
     f.tags.length
   );
+}
+
+// "Jun 1 – Jun 15" label for a custom range.
+export function formatDateRange(from: string, to: string): string {
+  const fmt = (s: string) =>
+    new Date(`${s}T00:00:00Z`).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      timeZone: "UTC",
+    });
+  return `${fmt(from)} – ${fmt(to)}`;
 }
 
 type Section =
@@ -106,6 +123,7 @@ export default function FilterMenu({
   const [rOp, setROp] = useState<"gte" | "lte">(
     filters.rMultiple?.op ?? "gte",
   );
+  const [showCustom, setShowCustom] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -144,7 +162,7 @@ export default function FilterMenu({
       </button>
 
       {open && (
-        <div className="absolute right-0 z-20 mt-2 w-64 rounded-xl border border-line bg-surface p-1.5 shadow-lg shadow-black/5">
+        <div className="absolute right-0 z-20 mt-2 w-72 rounded-xl border border-line bg-surface p-1.5 shadow-lg shadow-black/5">
           <div className="kicker px-2.5 py-1.5">Filter by</div>
 
           {SECTIONS.map(({ id, label, Icon }) => {
@@ -186,10 +204,39 @@ export default function FilterMenu({
                             setFilters({
                               ...filters,
                               dateRange: filters.dateRange === v ? null : v,
+                              dateFrom: null,
+                              dateTo: null,
                             })
                           }
                         />
                       ))}
+                    {id === "date" && (
+                      <>
+                        <Option
+                          label={
+                            filters.dateFrom && filters.dateTo
+                              ? formatDateRange(filters.dateFrom, filters.dateTo)
+                              : "Custom range…"
+                          }
+                          active={!!(filters.dateFrom && filters.dateTo)}
+                          onClick={() => setShowCustom((s) => !s)}
+                        />
+                        {showCustom && (
+                          <DateRangePicker
+                            from={filters.dateFrom}
+                            to={filters.dateTo}
+                            onApply={(from, to) => {
+                              setFilters({ ...filters, dateFrom: from, dateTo: to, dateRange: null });
+                              setShowCustom(false);
+                            }}
+                            onClear={() => {
+                              setFilters({ ...filters, dateFrom: null, dateTo: null });
+                              setShowCustom(false);
+                            }}
+                          />
+                        )}
+                      </>
+                    )}
 
                     {id === "direction" &&
                       (
