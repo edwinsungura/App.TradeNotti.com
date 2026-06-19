@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <rect width="120" height="120" rx="26" fill="#ffffff" />
+  <!-- rising performance line (same shape as the brand mark, no wordmark) -->
+  <polyline
+    points="12,76 25,60 38,68 51,52 65,60 78,56 91,60 104,44"
+    stroke="#5b4ef5"
+    stroke-width="9"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <!-- mid hollow node -->
+  <circle cx="78" cy="56" r="7" fill="#ffffff" stroke="#5b4ef5" stroke-width="5" />
+  <!-- end node with soft halo -->
+  <circle cx="104" cy="44" r="13" fill="#5b4ef5" opacity="0.18" />
+  <circle cx="104" cy="44" r="7" fill="#5b4ef5" />
+</svg>
