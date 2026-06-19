@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 import type { ProfileData, ManagedAccount } from "@/lib/settings";
 import AccountModal from "./AccountModal";
 import ConnectBrokerModal from "./ConnectBrokerModal";
-import { CheckIcon, PlusIcon, ChevronIcon, TrashIcon, ImageIcon, LogoutIcon } from "../icons";
+import { PlusIcon, ChevronIcon, TrashIcon, ImageIcon, LogoutIcon } from "../icons";
 
 async function compress(file: File, max = 400, quality = 0.85): Promise<string> {
   const url = URL.createObjectURL(file);
@@ -61,13 +61,6 @@ function syncedLabel(iso: string | null): string {
   if (h < 24) return `Synced ${h}h ago`;
   return `Synced ${Math.floor(h / 24)}d ago`;
 }
-
-const SUB_FEATURES = [
-  "Unlimited trades with notes & screenshots",
-  "Multiple trading accounts",
-  "Calendar + analytics + rules",
-  "Export & integrations",
-];
 
 export default function SettingsView({
   profile: initialProfile,
@@ -267,39 +260,6 @@ export default function SettingsView({
               </div>
               {profileError && <p className="mt-1 text-[12px] text-loss">{profileError}</p>}
             </div>
-          </div>
-        </section>
-
-        {/* Subscription */}
-        <section className="mb-5 rounded-2xl border border-line bg-surface p-6">
-          <div className="mb-4 flex items-start justify-between">
-            <div>
-              <div className="kicker mb-1">Subscription</div>
-              <h2 className="text-[15px] font-semibold">
-                Pro · <span className="font-normal text-muted">monthly</span>
-              </h2>
-            </div>
-            <span className="rounded-lg border border-line px-3 py-1.5 text-[13px] font-medium text-faint">
-              Billing portal
-            </span>
-          </div>
-          <div className="flex flex-col gap-5 sm:flex-row">
-            <div className="sm:w-44">
-              <div className="num text-[28px] font-bold tracking-tight">
-                $9.99<span className="text-[14px] font-medium text-faint">/mo</span>
-              </div>
-              <p className="mt-1 text-[12px] text-faint">Renews monthly · demo plan</p>
-            </div>
-            <ul className="flex-1 space-y-2">
-              {SUB_FEATURES.map((f) => (
-                <li key={f} className="flex items-center gap-2 text-[13.5px] text-ink-soft">
-                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-profit-soft text-profit">
-                    <CheckIcon size={11} />
-                  </span>
-                  {f}
-                </li>
-              ))}
-            </ul>
           </div>
         </section>
 
