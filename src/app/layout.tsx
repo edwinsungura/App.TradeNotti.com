@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Bricolage_Grotesque } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
+
+const clerkEnabled = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
 const inter = Inter({
   subsets: ["latin"],
@@ -30,9 +33,19 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
+  const tree = (
     <html lang="en" className={`${inter.variable} ${bricolage.variable}`}>
       <body>{children}</body>
     </html>
+  );
+
+  // Only mount ClerkProvider when configured, so builds without Clerk keys
+  // still compile and run.
+  return clerkEnabled ? (
+    <ClerkProvider signInUrl="/login" signUpUrl="/signup" afterSignOutUrl="/login">
+      {tree}
+    </ClerkProvider>
+  ) : (
+    tree
   );
 }

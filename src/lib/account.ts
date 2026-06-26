@@ -1,23 +1,66 @@
 import { cache } from "react";
+import { currentUser } from "@clerk/nextjs/server";
 import { prisma } from "./db";
 
-// Until auth is added, "the current user" is the seeded demo user. This is the
-// single seam to replace with a real session lookup later.
-export const getCurrentUserEmail = cache(async (): Promise<string> => {
-  return process.env.DEMO_USER_EMAIL || "edwin@tradenotti.com";
-});
+// Auth is on only when Clerk is configured. Without it (local/dev builds with
+// no keys) we fall back to the seeded demo user so the app still compiles/runs.
+const CLERK_ENABLED = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
-// Wrapped in React cache() so repeated calls within one server request hit the
-// database once instead of re-querying per call site.
+function sanitizeUsername(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 24) || "trader";
+}
+
+// Just-in-time provisioning: the first time a Clerk user hits the app, create
+// their own DB user. Keyed by email (Clerk emails are unique).
+async function findOrCreateUser(
+  email: string,
+  name: string,
+  usernameGuess?: string,
+) {
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) return existing;
+
+  const base = sanitizeUsername(usernameGuess || email.split("@")[0]);
+  let username = base;
+  let n = 1;
+  while (await prisma.user.findUnique({ where: { username } })) {
+    username = `${base}${n++}`;
+  }
+  return prisma.user.create({ data: { email, username, name: name || base } });
+}
+
+// The signed-in user's DB record (cached per request). Returns null when no one
+// is signed in (Clerk enabled) — callers/route guards handle that.
 export const getCurrentUser = cache(async () => {
-  const email = await getCurrentUserEmail();
+  if (CLERK_ENABLED) {
+    const cu = await currentUser();
+    if (!cu) return null;
+    const email =
+      cu.primaryEmailAddress?.emailAddress ??
+      cu.emailAddresses[0]?.emailAddress ??
+      null;
+    if (!email) return null;
+    const name =
+      [cu.firstName, cu.lastName].filter(Boolean).join(" ") ||
+      cu.username ||
+      email.split("@")[0];
+    return findOrCreateUser(email, name, cu.username ?? undefined);
+  }
+
+  // Demo fallback (no Clerk keys).
+  const email = process.env.DEMO_USER_EMAIL || "edwin@tradenotti.com";
   return prisma.user.findUnique({ where: { email } });
 });
 
+export const getCurrentUserEmail = cache(async (): Promise<string | null> => {
+  return (await getCurrentUser())?.email ?? null;
+});
+
 export const getAccountsForCurrentUser = cache(async () => {
-  const email = await getCurrentUserEmail();
+  const user = await getCurrentUser();
+  if (!user) return [];
   return prisma.account.findMany({
-    where: { user: { email }, archived: false },
+    where: { userId: user.id, archived: false },
     orderBy: { createdAt: "asc" },
   });
 });

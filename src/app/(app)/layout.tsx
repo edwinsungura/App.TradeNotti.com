@@ -1,11 +1,13 @@
 import Sidebar from "@/components/Sidebar";
 import { MobileNavProvider } from "@/components/MobileNav";
+import { requireUser } from "@/lib/auth";
 
-export default function AppLayout({
+export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  await requireUser();
   return (
     <MobileNavProvider>
       <div className="flex h-screen overflow-hidden">

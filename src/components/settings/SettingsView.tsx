@@ -6,6 +6,9 @@ import type { ProfileData, ManagedAccount } from "@/lib/settings";
 import AccountModal from "./AccountModal";
 import ConnectBrokerModal from "./ConnectBrokerModal";
 import { PlusIcon, ChevronIcon, TrashIcon, ImageIcon, LogoutIcon } from "../icons";
+import ClerkSignOutButton from "./ClerkSignOutButton";
+
+const clerkEnabled = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
 async function compress(file: File, max = 400, quality = 0.85): Promise<string> {
   const url = URL.createObjectURL(file);
@@ -402,12 +405,16 @@ export default function SettingsView({
 
         {/* Sign out */}
         <div className="mt-5 flex justify-end">
-          <button
-            onClick={signOut}
-            className="flex items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-[13px] font-medium text-ink-soft transition-colors hover:border-loss/40 hover:bg-loss-soft hover:text-loss"
-          >
-            <LogoutIcon size={16} /> Sign out
-          </button>
+          {clerkEnabled ? (
+            <ClerkSignOutButton />
+          ) : (
+            <button
+              onClick={signOut}
+              className="flex items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-[13px] font-medium text-ink-soft transition-colors hover:border-loss/40 hover:bg-loss-soft hover:text-loss"
+            >
+              <LogoutIcon size={16} /> Sign out
+            </button>
+          )}
         </div>
       </div>
 
