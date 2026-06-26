@@ -212,3 +212,22 @@ h1 {
   height: 0;
   pointer-events: none;
 }
+
+/* ---------------------------------------------------------------------------
+   Clerk auth (login / signup) — hide social sign-in, divider, and the
+   "Secured by Clerk" branding so only email auth shows.
+   ------------------------------------------------------------------------- */
+.cl-socialButtons,
+.cl-socialButtonsBlockButton,
+.cl-socialButtonsIconButton,
+.cl-dividerRow {
+  display: none !important;
+}
+/* Clerk branding badge ("Secured by Clerk") */
+.cl-footer a[href*="clerk.com"],
+.cl-card a[href*="clerk.com"],
+.cl-internal-1dauvpw,
+.cl-logoBox + .cl-internal,
+.cl-badge {
+  display: none !important;
+}

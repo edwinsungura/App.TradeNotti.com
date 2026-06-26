@@ -1,4 +1,5 @@
 import TopBar from "@/components/TopBar";
+import EmptyAccount from "@/components/EmptyAccount";
 import ResourcesView from "@/components/resources/ResourcesView";
 import {
   getAccountsForCurrentUser,
@@ -23,11 +24,7 @@ export default async function ResourcesPage({
   ]);
 
   if (!account || !user) {
-    return (
-      <div className="flex flex-1 items-center justify-center text-muted">
-        No account found. Run the seed to get started.
-      </div>
-    );
+    return <EmptyAccount />;
   }
 
   const docs = await listDocs(user.id);

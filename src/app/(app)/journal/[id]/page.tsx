@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import TopBar from "@/components/TopBar";
+import EmptyAccount from "@/components/EmptyAccount";
 import TradeDetail from "@/components/journal/TradeDetail";
 import {
   getAccountsForCurrentUser,
@@ -24,11 +25,7 @@ export default async function TradeDetailPage({
   ]);
 
   if (!account) {
-    return (
-      <div className="flex flex-1 items-center justify-center text-muted">
-        No account found. Run the seed to get started.
-      </div>
-    );
+    return <EmptyAccount />;
   }
 
   const trade = await getTradeDetail(account.id, id);

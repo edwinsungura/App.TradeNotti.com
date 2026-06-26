@@ -19,7 +19,7 @@ export default async function SettingsPage() {
   if (!user) {
     return (
       <div className="flex flex-1 items-center justify-center text-muted">
-        No user found. Run the seed to get started.
+        We&apos;re getting your workspace ready. Please refresh in a moment.
       </div>
     );
   }

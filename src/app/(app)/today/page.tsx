@@ -1,4 +1,5 @@
 import TopBar from "@/components/TopBar";
+import EmptyAccount from "@/components/EmptyAccount";
 import DailyInsightCard from "@/components/today/DailyInsightCard";
 import TodaysTrades from "@/components/today/TodaysTrades";
 import TradingRules from "@/components/today/TradingRules";
@@ -28,11 +29,7 @@ export default async function TodayPage({
   ]);
 
   if (!account) {
-    return (
-      <div className="flex flex-1 items-center justify-center text-muted">
-        No account found. Run the seed to get started.
-      </div>
-    );
+    return <EmptyAccount />;
   }
 
   const [trades, rules, insight] = await Promise.all([

@@ -1,4 +1,5 @@
 import TopBar from "@/components/TopBar";
+import EmptyAccount from "@/components/EmptyAccount";
 import RulebookView from "@/components/rules/RulebookView";
 import {
   getAccountsForCurrentUser,
@@ -23,11 +24,7 @@ export default async function RulesPage({
   ]);
 
   if (!account) {
-    return (
-      <div className="flex flex-1 items-center justify-center text-muted">
-        No account found. Run the seed to get started.
-      </div>
-    );
+    return <EmptyAccount />;
   }
 
   const rules = await getRulesForAccount(account.id);
