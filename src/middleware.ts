@@ -16,28 +16,18 @@ const isProtected = createRouteMatcher([
 
 const CLERK_ENABLED = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
-// The public marketing / waitlist site. app.tradenotti.com is invite-only beta,
-// so anyone who isn't a signed-in beta user is sent here. Lives in a separate
-// Vercel project — we only ever link out to it, never serve it from this app.
-const WAITLIST_URL =
-  process.env.NEXT_PUBLIC_WAITLIST_URL || "https://tradenotti.com";
-
 const withClerk = clerkMiddleware(async (auth, req) => {
   const url = req.nextUrl;
-  const { userId } = await auth();
-
-  // Bare app domain: signed-in beta users go to their dashboard; everyone else
-  // gets the public waitlist site.
+  // Dashboard is the home for signed-in beta users.
   if (url.pathname === "/") {
-    if (userId) return NextResponse.redirect(new URL("/today", req.url));
-    return NextResponse.redirect(WAITLIST_URL);
+    return NextResponse.redirect(new URL("/today", req.url));
   }
-
-  // Protected surfaces: a signed-out visitor isn't a beta user yet, so send
-  // them to the waitlist rather than a login wall. Invited users reach /login
-  // and /signup directly (those routes are public) from their Clerk invitation.
-  if (isProtected(req) && !userId) {
-    return NextResponse.redirect(WAITLIST_URL);
+  // Signed-out visitors are sent to the in-app /login (same host, so it can
+  // never loop). Beta access itself is enforced by Clerk "Restricted" mode:
+  // only invited emails can create an account, so /login is a dead end for
+  // anyone who hasn't been invited.
+  if (isProtected(req)) {
+    await auth.protect();
   }
   return NextResponse.next();
 });
