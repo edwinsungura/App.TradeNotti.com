@@ -16,18 +16,49 @@ const isProtected = createRouteMatcher([
 
 const CLERK_ENABLED = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
+// Optional: the public marketing / waitlist site. Set NEXT_PUBLIC_WAITLIST_URL
+// (e.g. https://tradenotti.com) ONCE that domain is served by the separate
+// marketing project. When set, signed-out visitors are sent there instead of
+// the in-app /login. Unset (default) => everyone goes to /login.
+const WAITLIST_URL = process.env.NEXT_PUBLIC_WAITLIST_URL;
+
+const stripWww = (host: string) => host.replace(/^www\./, "");
+
+/**
+ * Where to send a signed-out visitor. Prefers the external waitlist site, but
+ * only when that site lives on a DIFFERENT registrable host than the current
+ * request — otherwise redirecting there would just bounce back into this app
+ * and loop. Falls back to the in-app /login, which shares the host and so can
+ * never loop.
+ */
+function signedOutTarget(req: NextRequest): NextResponse {
+  if (WAITLIST_URL) {
+    try {
+      const target = new URL(WAITLIST_URL);
+      const here = stripWww(req.nextUrl.hostname);
+      if (stripWww(target.hostname) !== here) {
+        return NextResponse.redirect(target);
+      }
+    } catch {
+      // Malformed env value: ignore and fall through to /login.
+    }
+  }
+  return NextResponse.redirect(new URL("/login", req.url));
+}
+
 const withClerk = clerkMiddleware(async (auth, req) => {
   const url = req.nextUrl;
-  // Dashboard is the home for signed-in beta users.
+  const { userId } = await auth();
+
   if (url.pathname === "/") {
-    return NextResponse.redirect(new URL("/today", req.url));
+    if (userId) return NextResponse.redirect(new URL("/today", req.url));
+    return signedOutTarget(req);
   }
-  // Signed-out visitors are sent to the in-app /login (same host, so it can
-  // never loop). Beta access itself is enforced by Clerk "Restricted" mode:
-  // only invited emails can create an account, so /login is a dead end for
-  // anyone who hasn't been invited.
-  if (isProtected(req)) {
-    await auth.protect();
+
+  // Beta access is enforced by Clerk "Restricted" mode (only invited emails can
+  // create an account); the middleware just routes signed-out visitors away.
+  if (isProtected(req) && !userId) {
+    return signedOutTarget(req);
   }
   return NextResponse.next();
 });
