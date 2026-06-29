@@ -51,9 +51,10 @@ export async function syncAccountTrades(accountId: string): Promise<SyncResult> 
     await provider.deploy();
     deployed = true;
 
-    const [positions, deals] = await Promise.all([
+    const [positions, deals, info] = await Promise.all([
       provider.getOpenPositions(),
       provider.getClosedDeals(account.lastSyncedAt ?? null),
+      provider.getAccountInformation(),
     ]);
 
     // --- reconcile OPEN positions ---
@@ -133,7 +134,13 @@ export async function syncAccountTrades(accountId: string): Promise<SyncResult> 
 
     await prisma.account.update({
       where: { id: accountId },
-      data: { syncStatus: "idle", lastSyncedAt: new Date() },
+      data: {
+        syncStatus: "idle",
+        lastSyncedAt: new Date(),
+        // Store the live balance so per-trade ROI (pnl / balance) can be computed.
+        ...(info?.balance != null ? { balance: info.balance } : {}),
+        ...(info?.currency ? { currency: info.currency } : {}),
+      },
     });
 
     return { open: positions.length, closed: toClose.length, imported };

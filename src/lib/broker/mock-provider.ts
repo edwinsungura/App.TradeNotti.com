@@ -1,4 +1,9 @@
-import type { BrokerDeal, BrokerPosition, BrokerProvider } from "./types";
+import type {
+  BrokerAccountInfo,
+  BrokerDeal,
+  BrokerPosition,
+  BrokerProvider,
+} from "./types";
 
 // Renders the Today page without broker credentials. Returns a small set of
 // open positions with lightly randomized floating P&L so the page feels live.
@@ -54,5 +59,10 @@ export class MockProvider implements BrokerProvider {
   // never duplicate seeded trades.
   async getClosedDeals(): Promise<BrokerDeal[]> {
     return [];
+  }
+
+  // Keep the seeded account balance untouched in mock mode.
+  async getAccountInformation(): Promise<BrokerAccountInfo | null> {
+    return null;
   }
 }

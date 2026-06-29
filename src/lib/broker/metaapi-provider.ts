@@ -1,4 +1,5 @@
 import type {
+  BrokerAccountInfo,
   BrokerConnection,
   BrokerDeal,
   BrokerPosition,
@@ -169,6 +170,24 @@ export class MetaApiProvider implements BrokerProvider {
       pnl: p.profit ?? null,
       openedAt: new Date(p.time),
     }));
+  }
+
+  async getAccountInformation(): Promise<BrokerAccountInfo | null> {
+    await this.ensureRegion();
+    const res = await this.clientFetch(
+      `${this.clientBase}/users/current/accounts/${this.accountId}/account-information`,
+      "account-information",
+    );
+    const a = (await res.json()) as {
+      balance?: number;
+      equity?: number;
+      currency?: string;
+    };
+    return {
+      balance: a.balance ?? 0,
+      equity: a.equity ?? null,
+      currency: a.currency ?? null,
+    };
   }
 
   async getClosedDeals(since: Date | null): Promise<BrokerDeal[]> {

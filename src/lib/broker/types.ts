@@ -31,6 +31,13 @@ export interface BrokerDeal {
   closedAt: Date;
 }
 
+// Account-level figures from the broker (used for balance + ROI).
+export interface BrokerAccountInfo {
+  balance: number; // account balance in account currency
+  equity: number | null;
+  currency: string | null;
+}
+
 export interface BrokerProvider {
   readonly name: string;
   // Boot the broker terminal (on-demand). No-op for providers that don't need it.
@@ -41,6 +48,8 @@ export interface BrokerProvider {
   getOpenPositions(): Promise<BrokerPosition[]>;
   // Closed trades since `since` (null = full history backfill).
   getClosedDeals(since: Date | null): Promise<BrokerDeal[]>;
+  // Account balance/equity/currency. null when unavailable (leaves stored value).
+  getAccountInformation(): Promise<BrokerAccountInfo | null>;
 }
 
 // Account-level connection details passed to a provider factory.
