@@ -30,8 +30,38 @@ model User {
   resourceDocs         ResourceDoc[]
   pins                 Pin[]
   notifications        Notification[]
+  habits               Habit[]
   sentPartnerships     Partnership[]  @relation("Requester")
   receivedPartnerships Partnership[]  @relation("Addressee")
+}
+
+// A customizable discipline habit tracked daily (the streak system).
+model Habit {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  emoji     String       @default("✅")
+  color     String       @default("#5b4ef5")
+  order     Int          @default(0)
+  archived  Boolean      @default(false)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  entries   HabitEntry[]
+
+  @@index([userId])
+}
+
+// One completion mark for a habit on a calendar day. Presence = done.
+model HabitEntry {
+  id        String   @id @default(cuid())
+  habitId   String
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  date      String // "YYYY-MM-DD"
+  createdAt DateTime @default(now())
+
+  @@unique([habitId, date])
+  @@index([habitId])
 }
 
 enum NotificationType {

@@ -7,6 +7,7 @@ import {
   getCurrentUser,
 } from "@/lib/account";
 import { listDocs } from "@/lib/resources";
+import { getHabitGrid } from "@/lib/habits";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,11 @@ export default async function ResourcesPage({
     return <EmptyAccount />;
   }
 
-  const docs = await listDocs(user.id);
+  const now = new Date();
+  const [docs, habits] = await Promise.all([
+    listDocs(user.id),
+    getHabitGrid(user.id, now.getUTCFullYear(), now.getUTCMonth()),
+  ]);
 
   const initial = (user.name ?? "T").charAt(0).toUpperCase();
 
@@ -44,7 +49,7 @@ export default async function ResourcesPage({
         activeId={account.id}
         userInitial={initial}
       />
-      <ResourcesView initialDocs={docs} />
+      <ResourcesView initialDocs={docs} initialHabits={habits} />
     </>
   );
 }
