@@ -21,6 +21,13 @@ function Base({ size = 18, children, ...props }: IconProps & { children: React.R
   );
 }
 
+export const SidebarIcon = (p: IconProps) => (
+  <Base {...p}>
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <line x1="9" y1="4" x2="9" y2="20" />
+  </Base>
+);
+
 export const SunIcon = (p: IconProps) => (
   <Base {...p}>
     <circle cx="12" cy="12" r="4" />

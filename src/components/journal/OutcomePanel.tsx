@@ -5,37 +5,16 @@ import type { JournalDetail } from "@/lib/journal";
 import type { TradeGrade } from "@prisma/client";
 import { signedClass } from "./cells";
 
-type Source = "AUTO" | "JOURNAL";
-
-function SourceBadge({ source }: { source: Source }) {
-  return (
-    <span
-      className={`rounded px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-wide ${
-        source === "AUTO"
-          ? "bg-black/[0.05] text-faint"
-          : "bg-accent-bg text-accent"
-      }`}
-    >
-      {source}
-    </span>
-  );
-}
-
 function Row({
   label,
-  source,
   children,
 }: {
   label: string;
-  source: Source;
   children: React.ReactNode;
 }) {
   return (
     <div className="flex items-center justify-between gap-3 border-b border-line/60 py-2.5 last:border-0">
-      <span className="flex items-center gap-2 text-[13px] text-muted">
-        {label}
-        <SourceBadge source={source} />
-      </span>
+      <span className="text-[13px] text-muted">{label}</span>
       <span className="text-[13.5px] font-medium text-ink">{children}</span>
     </div>
   );
@@ -121,27 +100,27 @@ export default function OutcomePanel({
       </div>
 
       <div className="flex flex-col">
-        <Row label="Entry date" source="AUTO">
+        <Row label="Entry date">
           {metrics.entryAt}
         </Row>
-        <Row label="Exit trade" source="AUTO">
+        <Row label="Exit trade">
           {detail.closedAt ? `${metrics.exitAt} · ${metrics.duration}` : "Open"}
         </Row>
-        <Row label="Stop loss" source="JOURNAL">
+        <Row label="Stop loss">
           <EditableText
             value={detail.stopLossNote}
             placeholder={metrics.stopLoss}
             onSave={(stopLossNote) => patch({ stopLossNote })}
           />
         </Row>
-        <Row label="Position size" source="AUTO">
+        <Row label="Position size">
           {metrics.positionSize}
         </Row>
-        <Row label="ROI" source="AUTO">
+        <Row label="ROI">
           <span className={signedClass(detail.roi)}>{metrics.roi}</span>
         </Row>
 
-        <Row label="Trade grade" source="JOURNAL">
+        <Row label="Trade grade">
           <select
             value={detail.grade ?? ""}
             onChange={(e) =>
@@ -155,7 +134,7 @@ export default function OutcomePanel({
           </select>
         </Row>
 
-        <Row label="Market direction" source="JOURNAL">
+        <Row label="Market direction">
           <select
             value={detail.marketDirection ?? ""}
             onChange={(e) => patch({ marketDirection: e.target.value || null })}
@@ -168,7 +147,7 @@ export default function OutcomePanel({
           </select>
         </Row>
 
-        <Row label="Phase of market" source="JOURNAL">
+        <Row label="Phase of market">
           <EditableText
             value={detail.phaseOfMarket}
             placeholder="e.g. Markup"
@@ -178,7 +157,9 @@ export default function OutcomePanel({
       </div>
 
       <p className="mt-3 text-[11px] text-faint">
-        {saving ? "Saving…" : "AUTO pulled from your broker · JOURNAL entered by you"}
+        {saving
+          ? "Saving…"
+          : "Fill in any blank fields (—) to complete this trade's journal."}
       </p>
     </section>
   );

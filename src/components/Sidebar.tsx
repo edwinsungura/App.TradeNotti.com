@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "./Logo";
@@ -15,6 +16,7 @@ import {
   PinboardIcon,
   SettingsIcon,
   CloseIcon,
+  SidebarIcon,
 } from "./icons";
 
 const NAV = [
@@ -68,10 +70,23 @@ function NavLink({
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { open, setOpen } = useMobileNav();
+  const { open, setOpen, collapsed, setCollapsed } = useMobileNav();
+  // Desktop hover-peek: when collapsed, hovering the left edge slides it in.
+  const [peek, setPeek] = useState(false);
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
-  const close = () => setOpen(false);
+  const close = () => {
+    setOpen(false);
+    setPeek(false);
+  };
+
+  // Desktop position: pinned (collapsed=false) sits in the layout; collapsed
+  // floats off-screen and only slides in (as an overlay) while peeking.
+  const desktopClass = collapsed
+    ? peek
+      ? "lg:fixed lg:translate-x-0 lg:shadow-2xl"
+      : "lg:fixed lg:-translate-x-full"
+    : "lg:static lg:z-auto lg:translate-x-0 lg:shadow-none";
 
   return (
     <>
@@ -84,13 +99,34 @@ export default function Sidebar() {
         />
       )}
 
+      {/* Desktop left-edge trigger — hover to peek, click to keep it open */}
+      {collapsed && (
+        <div
+          onMouseEnter={() => setPeek(true)}
+          onClick={() => setCollapsed(false)}
+          className="fixed inset-y-0 left-0 z-30 hidden w-2.5 cursor-pointer transition-colors hover:bg-line/50 lg:block"
+          aria-hidden
+        />
+      )}
+
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex h-screen w-60 shrink-0 flex-col border-r border-line bg-surface px-3 py-4 transition-transform duration-200 lg:static lg:z-auto lg:translate-x-0 ${
+        onMouseLeave={() => setPeek(false)}
+        className={`fixed inset-y-0 left-0 z-40 flex h-screen w-60 shrink-0 flex-col border-r border-line bg-surface px-3 py-4 transition-transform duration-200 ${
           open ? "translate-x-0" : "-translate-x-full"
-        }`}
+        } ${desktopClass}`}
       >
         <div className="flex items-center justify-between px-3 pb-6 pt-1">
           <Logo />
+          {/* Desktop collapse/keep toggle */}
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            aria-label={collapsed ? "Keep sidebar open" : "Hide sidebar"}
+            title={collapsed ? "Keep sidebar open" : "Hide sidebar"}
+            className="-mr-1 hidden h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-black/[0.04] lg:flex"
+          >
+            <SidebarIcon size={18} />
+          </button>
+          {/* Mobile close */}
           <button
             onClick={close}
             aria-label="Close menu"
