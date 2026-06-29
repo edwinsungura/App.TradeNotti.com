@@ -230,7 +230,6 @@ export async function provisionMetaApiAccount(creds: {
       magic: 0,
       region,
       application: "MetaApi",
-      keepHistoryDaysOnDisk: 30,
     }),
     cache: "no-store",
   });
