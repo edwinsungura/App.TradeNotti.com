@@ -42,7 +42,7 @@ export default async function TodayPage({
     getTodayInsight(account.id),
   ]);
 
-  const firstName = titleCase(user?.name?.split(" ")[0] ?? "trader");
+  const displayName = titleCase(user?.name ?? "trader");
   const initial = (user?.name ?? "T").charAt(0).toUpperCase();
 
   return (
@@ -63,7 +63,7 @@ export default async function TodayPage({
         <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
           <div className="kicker mb-2">{formatLongDate()}</div>
           <h1 className="mb-8 text-2xl font-bold tracking-tight sm:text-3xl">
-            {greeting()}, {firstName}.
+            {greeting()}, {displayName}.
           </h1>
 
           <div className="flex flex-col gap-5">
