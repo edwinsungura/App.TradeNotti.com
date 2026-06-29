@@ -84,13 +84,12 @@ export async function getHabitGrid(
   const [ty, tm, td] = today.split("-").map(Number);
   const todayDay = ty === year && tm - 1 === month ? td : null;
 
-  // How many days count toward completion %: past month = all, current = up to
-  // today, future = none.
   const cmp = year * 12 + month - (ty * 12 + (tm - 1));
-  const upTo = cmp < 0 ? daysInMonth : cmp > 0 ? 0 : td;
 
-  let cellsDone = 0;
-  let cellsPossible = 0;
+  // Consistency % is based on what you actually marked: done ticks over the
+  // total marks (done ✓ + missed ✗). Unmarked days don't count either way.
+  let doneMarks = 0;
+  let totalMarks = 0;
 
   const out: HabitStat[] = habits.map((h) => {
     const byDate = new Map(h.entries.map((e) => [e.date, e.status]));
@@ -104,8 +103,8 @@ export async function getHabitGrid(
     }
     const { current, longest } = computeStreaks(doneSet);
 
-    cellsDone += days.slice(0, upTo).filter((s) => s === "done").length;
-    cellsPossible += upTo;
+    doneMarks += days.filter((s) => s === "done").length;
+    totalMarks += days.filter((s) => s === "done" || s === "missed").length;
 
     return {
       id: h.id,
@@ -129,7 +128,7 @@ export async function getHabitGrid(
     relation: cmp < 0 ? "past" : cmp > 0 ? "future" : "current",
     habits: out,
     completionPct:
-      cellsPossible > 0 ? Math.round((cellsDone / cellsPossible) * 100) : 0,
+      totalMarks > 0 ? Math.round((doneMarks / totalMarks) * 100) : 0,
   };
 }
 
