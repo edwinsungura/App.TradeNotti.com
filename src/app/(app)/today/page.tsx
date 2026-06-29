@@ -6,12 +6,13 @@ import TradingRules from "@/components/today/TradingRules";
 import {
   getAccountsForCurrentUser,
   getActiveAccount,
+  getActiveAccountIds,
   getCurrentUser,
 } from "@/lib/account";
 import { getOpenTrades } from "@/lib/trades";
 import { getRulesForAccount } from "@/lib/rules";
 import { getTodayInsight } from "@/lib/ai/daily-insight";
-import { greeting, formatLongDate } from "@/lib/format";
+import { greeting, formatLongDate, titleCase } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -22,10 +23,11 @@ export default async function TodayPage({
 }) {
   const { account: accountParam } = await searchParams;
 
-  const [user, accounts, account] = await Promise.all([
+  const [user, accounts, account, accountIds] = await Promise.all([
     getCurrentUser(),
     getAccountsForCurrentUser(),
     getActiveAccount(accountParam),
+    getActiveAccountIds(accountParam),
   ]);
 
   if (!account) {
@@ -33,12 +35,14 @@ export default async function TodayPage({
   }
 
   const [trades, rules, insight] = await Promise.all([
-    getOpenTrades(account.id),
+    // Open trades aggregate across the selected accounts; rules + the daily
+    // insight stay scoped to the primary (first selected) account.
+    getOpenTrades(accountIds),
     getRulesForAccount(account.id),
     getTodayInsight(account.id),
   ]);
 
-  const firstName = user?.name?.split(" ")[0] ?? "trader";
+  const firstName = titleCase(user?.name?.split(" ")[0] ?? "trader");
   const initial = (user?.name ?? "T").charAt(0).toUpperCase();
 
   return (

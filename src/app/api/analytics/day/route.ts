@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getActiveAccount } from "@/lib/account";
+import { getActiveAccountIds } from "@/lib/account";
 import { getDayTrades } from "@/lib/analytics";
 
 export const dynamic = "force-dynamic";
@@ -12,11 +12,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Invalid date" }, { status: 400 });
   }
 
-  const account = await getActiveAccount(searchParams.get("accountId") ?? undefined);
-  if (!account) {
+  const ids = await getActiveAccountIds(searchParams.get("accountId") ?? undefined);
+  if (ids.length === 0) {
     return NextResponse.json({ error: "No account found" }, { status: 404 });
   }
 
-  const data = await getDayTrades(account.id, date);
+  const data = await getDayTrades(ids, date);
   return NextResponse.json(data);
 }

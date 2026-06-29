@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getActiveAccount } from "@/lib/account";
+import { getActiveAccountIds } from "@/lib/account";
 import { getCalendar } from "@/lib/analytics";
 
 export const dynamic = "force-dynamic";
@@ -16,11 +16,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Invalid month" }, { status: 400 });
   }
 
-  const account = await getActiveAccount(searchParams.get("accountId") ?? undefined);
-  if (!account) {
+  const ids = await getActiveAccountIds(searchParams.get("accountId") ?? undefined);
+  if (ids.length === 0) {
     return NextResponse.json({ error: "No account found" }, { status: 404 });
   }
 
-  const data = await getCalendar(account.id, year, month);
+  const data = await getCalendar(ids, year, month);
   return NextResponse.json(data);
 }

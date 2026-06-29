@@ -1,4 +1,4 @@
-import { prisma } from "./db";
+import { prisma, accountWhere, type AccountScope } from "./db";
 import type {
   Prisma,
   TradeDirection,
@@ -200,18 +200,20 @@ function statsFor(closed: TradeWithTags[], w: Window): WindowStats {
 
 /** Whole analytics payload for an account + range, derived from the journal. */
 export async function getAnalytics(
-  accountId: string,
+  account: AccountScope,
   range: Range,
   custom?: CustomRange,
 ): Promise<AnalyticsData> {
-  const account = await prisma.account.findUnique({
-    where: { id: accountId },
+  const accounts = await prisma.account.findMany({
+    where: { id: accountWhere(account) },
     select: { balance: true, currency: true },
   });
-  const balance = account ? Number(account.balance) : 0;
+  // Combined view: balance is the sum across the selected accounts.
+  const balance = accounts.reduce((s, a) => s + Number(a.balance), 0);
+  const currency = accounts[0]?.currency ?? "USD";
 
   const trades = await prisma.trade.findMany({
-    where: { accountId },
+    where: { accountId: accountWhere(account) },
     include: { tags: { include: { tag: true } } },
   });
   const closed = trades.filter((t) => t.status === "CLOSED");
@@ -289,7 +291,7 @@ export async function getAnalytics(
   return {
     range,
     periodLabel: label,
-    currency: account?.currency ?? "USD",
+    currency,
     netPnl: cur.netPnl,
     netPnlDeltaPct,
     winRate: cur.winRate,
@@ -383,7 +385,7 @@ function mapDayTrade(t: DayTradeRow): DayTrade {
 
 /** Closed trades whose exit falls on the given UTC day (yyyy-mm-dd). */
 export async function getDayTrades(
-  accountId: string,
+  account: AccountScope,
   dateStr: string,
 ): Promise<{ date: string; totalPnl: number; trades: DayTrade[] }> {
   const [y, m, d] = dateStr.split("-").map(Number);
@@ -391,7 +393,11 @@ export async function getDayTrades(
   const end = new Date(start.getTime() + 864e5);
 
   const rows = await prisma.trade.findMany({
-    where: { accountId, status: "CLOSED", closedAt: { gte: start, lt: end } },
+    where: {
+      accountId: accountWhere(account),
+      status: "CLOSED",
+      closedAt: { gte: start, lt: end },
+    },
     include: { tags: { include: { tag: true } }, screenshots: true },
     orderBy: { closedAt: "asc" },
   });
@@ -403,7 +409,7 @@ export async function getDayTrades(
 
 /** Closed trades carrying a given tag ("setup"), within the selected range. */
 export async function getSetupTrades(
-  accountId: string,
+  account: AccountScope,
   tag: string,
   range: Range,
 ): Promise<{ tag: string; totalPnl: number; trades: DayTrade[] }> {
@@ -414,7 +420,7 @@ export async function getSetupTrades(
 
   const rows = await prisma.trade.findMany({
     where: {
-      accountId,
+      accountId: accountWhere(account),
       status: "CLOSED",
       closedAt,
       tags: { some: { tag: { name: tag } } },
@@ -436,7 +442,7 @@ function ymd(d: Date): string {
 
 /** Monthly grid (Mon–Sun) of daily P&L from closed trades. */
 export async function getCalendar(
-  accountId: string,
+  account: AccountScope,
   year: number,
   month: number,
 ): Promise<CalendarData> {
@@ -444,7 +450,11 @@ export async function getCalendar(
   const monthEnd = new Date(Date.UTC(year, month + 1, 1));
 
   const trades = await prisma.trade.findMany({
-    where: { accountId, status: "CLOSED", closedAt: { gte: monthStart, lt: monthEnd } },
+    where: {
+      accountId: accountWhere(account),
+      status: "CLOSED",
+      closedAt: { gte: monthStart, lt: monthEnd },
+    },
     select: { pnl: true, closedAt: true },
   });
 

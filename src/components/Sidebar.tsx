@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "./Logo";
@@ -72,7 +72,26 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { open, setOpen, collapsed, setCollapsed } = useMobileNav();
   // Desktop hover-peek: when collapsed, hovering the left edge slides it in.
+  // A short close delay debounces the boundary between the edge strip and the
+  // panel so it doesn't flicker as the cursor crosses.
   const [peek, setPeek] = useState(false);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showPeek = () => {
+    if (hideTimer.current) {
+      clearTimeout(hideTimer.current);
+      hideTimer.current = null;
+    }
+    setPeek(true);
+  };
+  const hidePeek = () => {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => setPeek(false), 220);
+  };
+  useEffect(() => () => {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+  }, []);
+
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
   const close = () => {
@@ -102,15 +121,16 @@ export default function Sidebar() {
       {/* Desktop left-edge trigger — hover to peek, click to keep it open */}
       {collapsed && (
         <div
-          onMouseEnter={() => setPeek(true)}
+          onMouseEnter={showPeek}
           onClick={() => setCollapsed(false)}
-          className="fixed inset-y-0 left-0 z-30 hidden w-2.5 cursor-pointer transition-colors hover:bg-line/50 lg:block"
+          className="fixed inset-y-0 left-0 z-30 hidden w-4 cursor-pointer lg:block"
           aria-hidden
         />
       )}
 
       <aside
-        onMouseLeave={() => setPeek(false)}
+        onMouseEnter={showPeek}
+        onMouseLeave={hidePeek}
         className={`fixed inset-y-0 left-0 z-40 flex h-screen w-60 shrink-0 flex-col border-r border-line bg-surface px-3 py-4 transition-transform duration-200 ${
           open ? "translate-x-0" : "-translate-x-full"
         } ${desktopClass}`}

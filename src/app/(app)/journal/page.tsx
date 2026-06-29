@@ -4,6 +4,7 @@ import JournalView from "@/components/journal/JournalView";
 import {
   getAccountsForCurrentUser,
   getActiveAccount,
+  getActiveAccountIds,
   getCurrentUser,
 } from "@/lib/account";
 import { getJournalTrades, getJournalFilterOptions } from "@/lib/journal";
@@ -17,10 +18,11 @@ export default async function JournalPage({
 }) {
   const { account: accountParam } = await searchParams;
 
-  const [user, accounts, account] = await Promise.all([
+  const [user, accounts, account, accountIds] = await Promise.all([
     getCurrentUser(),
     getAccountsForCurrentUser(),
     getActiveAccount(accountParam),
+    getActiveAccountIds(accountParam),
   ]);
 
   if (!account) {
@@ -28,8 +30,8 @@ export default async function JournalPage({
   }
 
   const [trades, options] = await Promise.all([
-    getJournalTrades(account.id),
-    getJournalFilterOptions(account.id),
+    getJournalTrades(accountIds),
+    getJournalFilterOptions(accountIds),
   ]);
 
   const initial = (user?.name ?? "T").charAt(0).toUpperCase();

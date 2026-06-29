@@ -1,4 +1,4 @@
-import { prisma } from "./db";
+import { prisma, accountWhere, type AccountScope } from "./db";
 import type {
   TradeDirection,
   TradeGrade,
@@ -38,9 +38,11 @@ export interface JournalDetail extends JournalRow {
 const num = (v: unknown) => (v == null ? null : Number(v));
 
 /** All trades for an account (open + closed), newest first — the Journal list. */
-export async function getJournalTrades(accountId: string): Promise<JournalRow[]> {
+export async function getJournalTrades(
+  account: AccountScope,
+): Promise<JournalRow[]> {
   const trades = await prisma.trade.findMany({
-    where: { accountId },
+    where: { accountId: accountWhere(account) },
     include: { tags: { include: { tag: true } } },
     orderBy: { openedAt: "desc" },
   });
@@ -108,12 +110,12 @@ export async function getTradeDetail(
 }
 
 /** Distinct symbols and tags for the filter menu options. */
-export async function getJournalFilterOptions(accountId: string): Promise<{
+export async function getJournalFilterOptions(account: AccountScope): Promise<{
   symbols: string[];
   tags: string[];
 }> {
   const trades = await prisma.trade.findMany({
-    where: { accountId },
+    where: { accountId: accountWhere(account) },
     select: { symbol: true, tags: { include: { tag: true } } },
   });
   const symbols = [...new Set(trades.map((t) => t.symbol))].sort();

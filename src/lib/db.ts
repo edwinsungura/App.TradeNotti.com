@@ -15,3 +15,9 @@ export const prisma =
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
+
+// Account selection can be a single id or several (multi-account view). Build a
+// Prisma `accountId` filter from either shape.
+export type AccountScope = string | string[];
+export const accountWhere = (scope: AccountScope) =>
+  Array.isArray(scope) ? { in: scope } : scope;

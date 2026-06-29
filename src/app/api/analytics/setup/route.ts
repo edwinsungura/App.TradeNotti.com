@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getActiveAccount } from "@/lib/account";
+import { getActiveAccountIds } from "@/lib/account";
 import { getSetupTrades, type Range } from "@/lib/analytics";
 
 export const dynamic = "force-dynamic";
@@ -16,11 +16,11 @@ export async function GET(req: NextRequest) {
   const rangeParam = searchParams.get("range") as Range | null;
   const range = rangeParam && RANGES.includes(rangeParam) ? rangeParam : "month";
 
-  const account = await getActiveAccount(searchParams.get("accountId") ?? undefined);
-  if (!account) {
+  const ids = await getActiveAccountIds(searchParams.get("accountId") ?? undefined);
+  if (ids.length === 0) {
     return NextResponse.json({ error: "No account found" }, { status: 404 });
   }
 
-  const data = await getSetupTrades(account.id, tag, range);
+  const data = await getSetupTrades(ids, tag, range);
   return NextResponse.json(data);
 }

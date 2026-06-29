@@ -1,4 +1,4 @@
-import { prisma } from "./db";
+import { prisma, accountWhere, type AccountScope } from "./db";
 import { Prisma } from "@prisma/client";
 
 // --- user documents --------------------------------------------------------
@@ -121,11 +121,11 @@ function periodKeyLabel(d: Date, period: Period): { key: string; label: string }
 
 /** Trading performance grouped by period, computed from closed trades. */
 export async function getPerformance(
-  accountId: string,
+  account: AccountScope,
   period: Period,
 ): Promise<PerformanceData> {
   const trades = await prisma.trade.findMany({
-    where: { accountId, status: "CLOSED" },
+    where: { accountId: accountWhere(account), status: "CLOSED" },
     orderBy: { closedAt: "asc" },
     select: { pnl: true, rMultiple: true, closedAt: true },
   });

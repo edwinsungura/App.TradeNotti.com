@@ -1,4 +1,4 @@
-import { prisma } from "./db";
+import { prisma, accountWhere, type AccountScope } from "./db";
 import type { TradeDirection, TradeGrade, TradeStatus } from "@prisma/client";
 
 export interface TradeView {
@@ -48,9 +48,11 @@ function toView(t: {
 }
 
 /** Currently running (OPEN) trades for an account, newest first. */
-export async function getOpenTrades(accountId: string): Promise<TradeView[]> {
+export async function getOpenTrades(
+  account: AccountScope,
+): Promise<TradeView[]> {
   const trades = await prisma.trade.findMany({
-    where: { accountId, status: "OPEN" },
+    where: { accountId: accountWhere(account), status: "OPEN" },
     include: { tags: { include: { tag: true } } },
     orderBy: { openedAt: "desc" },
   });

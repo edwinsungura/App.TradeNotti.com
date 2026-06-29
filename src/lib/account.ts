@@ -68,13 +68,40 @@ export const getAccountsForCurrentUser = cache(async () => {
 /**
  * Resolves the active account. Prefers the given id (if it belongs to the
  * current user), otherwise the first account. Reuses the cached account list.
+ * For a multi-select param ("all" / "id,id") this returns the first selected
+ * account — the single-account context (sync, add-trade, TopBar avatar).
  */
 export async function getActiveAccount(accountId?: string) {
   const accounts = await getAccountsForCurrentUser();
   if (accounts.length === 0) return null;
   if (accountId) {
-    const match = accounts.find((a) => a.id === accountId);
+    const ids = parseAccountParam(accountId);
+    const match = accounts.find((a) => ids.includes(a.id));
     if (match) return match;
   }
   return accounts[0];
+}
+
+function parseAccountParam(param: string): string[] {
+  if (param === "all") return ["all"];
+  return param.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+/**
+ * Resolves an account-selection param to the set of account ids to query.
+ * - undefined → the first account (default single view)
+ * - "all"     → every account the user owns (combined view)
+ * - "id,id"   → the listed accounts that actually belong to the user
+ * Always returns at least one id when the user has any account.
+ */
+export async function getActiveAccountIds(param?: string): Promise<string[]> {
+  const accounts = await getAccountsForCurrentUser();
+  if (accounts.length === 0) return [];
+  if (!param) return [accounts[0].id];
+  if (param === "all") return accounts.map((a) => a.id);
+  const requested = parseAccountParam(param);
+  const valid = accounts
+    .filter((a) => requested.includes(a.id))
+    .map((a) => a.id);
+  return valid.length > 0 ? valid : [accounts[0].id];
 }

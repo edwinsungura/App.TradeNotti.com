@@ -4,6 +4,7 @@ import AnalyticsView from "@/components/analytics/AnalyticsView";
 import {
   getAccountsForCurrentUser,
   getActiveAccount,
+  getActiveAccountIds,
   getCurrentUser,
 } from "@/lib/account";
 import { getAnalytics, getCalendar } from "@/lib/analytics";
@@ -18,10 +19,11 @@ export default async function AnalyticsPage({
 }) {
   const { account: accountParam } = await searchParams;
 
-  const [user, accounts, account] = await Promise.all([
+  const [user, accounts, account, accountIds] = await Promise.all([
     getCurrentUser(),
     getAccountsForCurrentUser(),
     getActiveAccount(accountParam),
+    getActiveAccountIds(accountParam),
   ]);
 
   if (!account) {
@@ -30,9 +32,9 @@ export default async function AnalyticsPage({
 
   const now = new Date();
   const [analytics, calendar, performance] = await Promise.all([
-    getAnalytics(account.id, "month"),
-    getCalendar(account.id, now.getUTCFullYear(), now.getUTCMonth()),
-    getPerformance(account.id, "monthly"),
+    getAnalytics(accountIds, "month"),
+    getCalendar(accountIds, now.getUTCFullYear(), now.getUTCMonth()),
+    getPerformance(accountIds, "monthly"),
   ]);
 
   const initial = (user?.name ?? "T").charAt(0).toUpperCase();
@@ -54,7 +56,7 @@ export default async function AnalyticsPage({
         initial={analytics}
         initialCalendar={calendar}
         performance={performance}
-        accountId={account.id}
+        accountId={accountParam ?? account.id}
       />
     </>
   );

@@ -47,6 +47,11 @@ export function formatTradeTime(iso: string): string {
   return `${diffDays}d ago · ${time}`;
 }
 
+// Capitalize the first letter of each word (e.g. "edwin sungura" -> "Edwin Sungura").
+export function titleCase(s: string): string {
+  return s.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export function greeting(date = new Date()): string {
   const h = date.getHours();
   if (h < 12) return "Good morning";
