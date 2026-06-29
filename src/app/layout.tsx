@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Bricolage_Grotesque } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { clerkAppearance } from "@/lib/clerk-appearance";
 import "./globals.css";
 
 const clerkEnabled = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
@@ -42,7 +43,12 @@ export default function RootLayout({
   // Only mount ClerkProvider when configured, so builds without Clerk keys
   // still compile and run.
   return clerkEnabled ? (
-    <ClerkProvider signInUrl="/login" signUpUrl="/signup" afterSignOutUrl="/login">
+    <ClerkProvider
+      signInUrl="/login"
+      signUpUrl="/signup"
+      afterSignOutUrl="/login"
+      appearance={clerkAppearance}
+    >
       {tree}
     </ClerkProvider>
   ) : (

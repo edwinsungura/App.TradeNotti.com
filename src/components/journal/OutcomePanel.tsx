@@ -4,6 +4,32 @@ import { useState } from "react";
 import type { JournalDetail } from "@/lib/journal";
 import type { TradeGrade } from "@prisma/client";
 import { signedClass } from "./cells";
+import InlineSelect, { type SelectOption } from "./InlineSelect";
+
+const GRADE_OPTIONS: SelectOption[] = [
+  { value: "HIGH_PROBABILITY", label: "High probability" },
+  { value: "LOW_PROBABILITY", label: "Low probability" },
+];
+
+const DIRECTION_OPTIONS: SelectOption[] = [
+  { value: "Bullish", label: "Bullish" },
+  { value: "Bearish", label: "Bearish" },
+  { value: "Ranging", label: "Ranging" },
+];
+
+// Trade grade renders as a colored pill, matching the badges used elsewhere.
+function gradeTrigger(opt: SelectOption | null) {
+  if (!opt) return <span className="text-faint">—</span>;
+  const cls =
+    opt.value === "HIGH_PROBABILITY"
+      ? "bg-grade-high-bg text-grade-high"
+      : "bg-grade-low-bg text-grade-low";
+  return (
+    <span className={`rounded-md px-2 py-0.5 text-[12px] font-semibold ${cls}`}>
+      {opt.label}
+    </span>
+  );
+}
 
 function Row({
   label,
@@ -19,9 +45,6 @@ function Row({
     </div>
   );
 }
-
-const selectClass =
-  "cursor-pointer rounded-md bg-transparent text-right text-[13.5px] font-medium text-ink outline-none hover:text-accent";
 
 // A right-aligned inline text field that saves when you click away or press Enter.
 function EditableText({
@@ -121,30 +144,20 @@ export default function OutcomePanel({
         </Row>
 
         <Row label="Trade grade">
-          <select
-            value={detail.grade ?? ""}
-            onChange={(e) =>
-              patch({ grade: (e.target.value || null) as TradeGrade | null })
-            }
-            className={selectClass}
-          >
-            <option value="">—</option>
-            <option value="HIGH_PROBABILITY">High probability</option>
-            <option value="LOW_PROBABILITY">Low probability</option>
-          </select>
+          <InlineSelect
+            value={detail.grade ?? null}
+            options={GRADE_OPTIONS}
+            onChange={(v) => patch({ grade: (v || null) as TradeGrade | null })}
+            renderTrigger={gradeTrigger}
+          />
         </Row>
 
         <Row label="Market direction">
-          <select
-            value={detail.marketDirection ?? ""}
-            onChange={(e) => patch({ marketDirection: e.target.value || null })}
-            className={selectClass}
-          >
-            <option value="">—</option>
-            <option>Bullish</option>
-            <option>Bearish</option>
-            <option>Ranging</option>
-          </select>
+          <InlineSelect
+            value={detail.marketDirection ?? null}
+            options={DIRECTION_OPTIONS}
+            onChange={(v) => patch({ marketDirection: v || null })}
+          />
         </Row>
 
         <Row label="Phase of market">
