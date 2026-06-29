@@ -46,6 +46,13 @@ interface MetaApiRawDeal {
 export class MetaApiProvider implements BrokerProvider {
   readonly name = "metaapi";
 
+  // The region the account is ACTUALLY provisioned in. MetaApi may place an
+  // account in a different region than requested (its default is "vint-hill"),
+  // and the client (data) API is region-scoped — hitting the wrong region 504s
+  // with "request URL does not match the account region". We resolve the real
+  // region from the account object and cache it.
+  private resolvedRegion?: string;
+
   constructor(
     private readonly token: string,
     private readonly accountId: string,
@@ -53,7 +60,25 @@ export class MetaApiProvider implements BrokerProvider {
   ) {}
 
   private get clientBase(): string {
-    return `https://mt-client-api-v1.${this.region}.agiliumtrade.ai`;
+    const region = this.resolvedRegion ?? this.region;
+    return `https://mt-client-api-v1.${region}.agiliumtrade.ai`;
+  }
+
+  // Read the account's real region once and cache it for client API calls.
+  private async ensureRegion(): Promise<void> {
+    if (this.resolvedRegion) return;
+    try {
+      const res = await fetch(
+        `${PROVISIONING_BASE}/users/current/accounts/${this.accountId}`,
+        { headers: this.headers(), cache: "no-store" },
+      );
+      if (res.ok) {
+        const a = (await res.json()) as { region?: string };
+        if (a.region) this.resolvedRegion = a.region;
+      }
+    } catch {
+      /* fall back to the configured region */
+    }
   }
 
   private headers() {
@@ -93,7 +118,9 @@ export class MetaApiProvider implements BrokerProvider {
           const a = (await res.json()) as {
             state?: string;
             connectionStatus?: string;
+            region?: string;
           };
+          if (a.region) this.resolvedRegion = a.region;
           if (a.state === "DEPLOYED" && a.connectionStatus === "CONNECTED") return;
         }
       } catch {
@@ -105,6 +132,7 @@ export class MetaApiProvider implements BrokerProvider {
   }
 
   async getOpenPositions(): Promise<BrokerPosition[]> {
+    await this.ensureRegion();
     const res = await fetch(
       `${this.clientBase}/users/current/accounts/${this.accountId}/positions`,
       { headers: this.headers(), cache: "no-store" },
@@ -127,6 +155,7 @@ export class MetaApiProvider implements BrokerProvider {
   }
 
   async getClosedDeals(since: Date | null): Promise<BrokerDeal[]> {
+    await this.ensureRegion();
     const start = since ?? new Date(Date.now() - 365 * 864e5); // 1y backfill
     const end = new Date(Date.now() + 60_000);
     const res = await fetch(
