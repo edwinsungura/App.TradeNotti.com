@@ -85,6 +85,24 @@ export class MetaApiProvider implements BrokerProvider {
     return { "auth-token": this.token, Accept: "application/json" } as const;
   }
 
+  // A just-deployed terminal is "connected" before it has finished synchronizing
+  // its terminal state, so REST reads transiently 502/503/504 ("not connected to
+  // broker yet"). Retry those with a short backoff until the data is ready.
+  private async clientFetch(url: string, what: string): Promise<Response> {
+    const maxAttempts = 6;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const res = await fetch(url, { headers: this.headers(), cache: "no-store" });
+      if (res.ok) return res;
+      const transient = res.status === 502 || res.status === 503 || res.status === 504;
+      if (transient && attempt < maxAttempts) {
+        await new Promise((r) => setTimeout(r, 4000));
+        continue;
+      }
+      throw await apiError(res, what);
+    }
+    throw new Error(`MetaApi ${what} failed after ${maxAttempts} attempts.`);
+  }
+
   async deploy(): Promise<void> {
     await fetch(
       `${PROVISIONING_BASE}/users/current/accounts/${this.accountId}/deploy`,
@@ -133,11 +151,10 @@ export class MetaApiProvider implements BrokerProvider {
 
   async getOpenPositions(): Promise<BrokerPosition[]> {
     await this.ensureRegion();
-    const res = await fetch(
+    const res = await this.clientFetch(
       `${this.clientBase}/users/current/accounts/${this.accountId}/positions`,
-      { headers: this.headers(), cache: "no-store" },
+      "positions",
     );
-    if (!res.ok) throw await apiError(res, "positions");
     const raw = (await res.json()) as MetaApiRawPosition[];
     return raw.map((p) => ({
       externalId: String(p.id),
@@ -158,11 +175,10 @@ export class MetaApiProvider implements BrokerProvider {
     await this.ensureRegion();
     const start = since ?? new Date(Date.now() - 365 * 864e5); // 1y backfill
     const end = new Date(Date.now() + 60_000);
-    const res = await fetch(
+    const res = await this.clientFetch(
       `${this.clientBase}/users/current/accounts/${this.accountId}/history-deals/time/${start.toISOString()}/${end.toISOString()}`,
-      { headers: this.headers(), cache: "no-store" },
+      "history-deals",
     );
-    if (!res.ok) throw await apiError(res, "history-deals");
     const deals = (await res.json()) as MetaApiRawDeal[];
     return pairDeals(deals);
   }
