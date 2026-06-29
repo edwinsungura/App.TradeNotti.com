@@ -1,12 +1,14 @@
 import { prisma } from "./db";
 
+export type DayStatus = "done" | "missed" | null;
+
 export interface HabitStat {
   id: string;
   name: string;
   emoji: string;
   color: string;
   order: number;
-  days: boolean[]; // length = days in month; index 0 = day 1
+  days: DayStatus[]; // length = days in month; index 0 = day 1
   doneCount: number; // completions this month
   currentStreak: number;
   longestStreak: number;
@@ -74,7 +76,7 @@ export async function getHabitGrid(
   const habits = await prisma.habit.findMany({
     where: { userId, archived: false },
     orderBy: [{ order: "asc" }, { createdAt: "asc" }],
-    include: { entries: { select: { date: true } } },
+    include: { entries: { select: { date: true, status: true } } },
   });
 
   const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
@@ -91,12 +93,18 @@ export async function getHabitGrid(
   let cellsPossible = 0;
 
   const out: HabitStat[] = habits.map((h) => {
-    const set = new Set(h.entries.map((e) => e.date));
-    const days: boolean[] = [];
-    for (let d = 1; d <= daysInMonth; d++) days.push(set.has(ds(year, month, d)));
-    const { current, longest } = computeStreaks(set);
+    const byDate = new Map(h.entries.map((e) => [e.date, e.status]));
+    const doneSet = new Set(
+      h.entries.filter((e) => e.status === "done").map((e) => e.date),
+    );
+    const days: DayStatus[] = [];
+    for (let d = 1; d <= daysInMonth; d++) {
+      const s = byDate.get(ds(year, month, d));
+      days.push(s === "done" ? "done" : s === "missed" ? "missed" : null);
+    }
+    const { current, longest } = computeStreaks(doneSet);
 
-    cellsDone += days.slice(0, upTo).filter(Boolean).length;
+    cellsDone += days.slice(0, upTo).filter((s) => s === "done").length;
     cellsPossible += upTo;
 
     return {
@@ -106,10 +114,10 @@ export async function getHabitGrid(
       color: h.color,
       order: h.order,
       days,
-      doneCount: days.filter(Boolean).length,
+      doneCount: days.filter((s) => s === "done").length,
       currentStreak: current,
       longestStreak: longest,
-      doneToday: set.has(today),
+      doneToday: doneSet.has(today),
     };
   });
 
@@ -169,23 +177,30 @@ export async function deleteHabit(userId: string, id: string): Promise<boolean> 
   return true;
 }
 
-// Toggle a habit's completion for a day. Returns the new done state, or null if
-// the habit doesn't belong to the user.
-export async function toggleEntry(
+// Cycle a habit's mark for a day: none -> done (✓) -> missed (✗) -> none.
+// Returns the new status, or null-result if the habit isn't the user's.
+export async function cycleEntry(
   userId: string,
   id: string,
   date: string,
-): Promise<{ done: boolean } | null> {
+): Promise<{ status: DayStatus } | null> {
   const owned = await prisma.habit.findFirst({ where: { id, userId }, select: { id: true } });
   if (!owned) return null;
   const existing = await prisma.habitEntry.findUnique({
     where: { habitId_date: { habitId: id, date } },
-    select: { id: true },
+    select: { id: true, status: true },
   });
-  if (existing) {
-    await prisma.habitEntry.delete({ where: { id: existing.id } });
-    return { done: false };
+  if (!existing) {
+    await prisma.habitEntry.create({ data: { habitId: id, date, status: "done" } });
+    return { status: "done" };
   }
-  await prisma.habitEntry.create({ data: { habitId: id, date } });
-  return { done: true };
+  if (existing.status === "done") {
+    await prisma.habitEntry.update({
+      where: { id: existing.id },
+      data: { status: "missed" },
+    });
+    return { status: "missed" };
+  }
+  await prisma.habitEntry.delete({ where: { id: existing.id } });
+  return { status: null };
 }

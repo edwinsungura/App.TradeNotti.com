@@ -58,6 +58,7 @@ model HabitEntry {
   habitId   String
   habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
   date      String // "YYYY-MM-DD"
+  status    String   @default("done") // "done" | "missed"
   createdAt DateTime @default(now())
 
   @@unique([habitId, date])

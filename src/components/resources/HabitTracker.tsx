@@ -1,8 +1,11 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import type { MonthGrid, HabitStat } from "@/lib/habits";
+import type { MonthGrid, HabitStat, DayStatus } from "@/lib/habits";
 import { PlusIcon, ChevronIcon, CheckIcon, TrashIcon, CloseIcon } from "../icons";
+
+const cycleStatus = (s: DayStatus): DayStatus =>
+  s === null ? "done" : s === "done" ? "missed" : null;
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -57,14 +60,15 @@ export default function HabitTracker({ initial }: { initial: MonthGrid }) {
     setBusy(false);
   };
 
-  // Optimistic cell flip, then refetch to refresh streaks + completion.
+  // Optimistic cell cycle (none → done → missed → none), then refetch to
+  // refresh streaks + completion.
   const toggle = async (habit: HabitStat, dayIdx: number) => {
     const date = `${grid.year}-${pad(grid.month + 1)}-${pad(dayIdx + 1)}`;
     setGrid((g) => ({
       ...g,
       habits: g.habits.map((h) =>
         h.id === habit.id
-          ? { ...h, days: h.days.map((v, i) => (i === dayIdx ? !v : v)) }
+          ? { ...h, days: h.days.map((v, i) => (i === dayIdx ? cycleStatus(v) : v)) }
           : h,
       ),
     }));
@@ -155,6 +159,24 @@ export default function HabitTracker({ initial }: { initial: MonthGrid }) {
         </div>
       </div>
 
+      {grid.habits.length > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-faint">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-flex h-4 w-4 items-center justify-center rounded bg-accent text-white">
+              <CheckIcon size={10} />
+            </span>
+            Done
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-flex h-4 w-4 items-center justify-center rounded border border-line bg-black/[0.05] text-faint">
+              <CloseIcon size={10} />
+            </span>
+            Missed
+          </span>
+          <span>Tap a day to cycle: done → missed → clear</span>
+        </div>
+      )}
+
       {grid.habits.length === 0 ? (
         <EmptyState onAdd={() => setAdding(true)} onQuickAdd={saveHabit} />
       ) : (
@@ -205,7 +227,7 @@ export default function HabitTracker({ initial }: { initial: MonthGrid }) {
                     </span>
                   </button>
 
-                  {h.days.map((done, i) => {
+                  {h.days.map((status, i) => {
                     const day = i + 1;
                     const isFuture =
                       grid.relation === "future" ||
@@ -213,22 +235,28 @@ export default function HabitTracker({ initial }: { initial: MonthGrid }) {
                         grid.todayDay != null &&
                         day > grid.todayDay);
                     const isToday = grid.todayDay === day;
+                    const done = status === "done";
+                    const missed = status === "missed";
                     return (
                       <button
                         key={i}
                         disabled={isFuture}
                         onClick={() => toggle(h, i)}
                         style={done ? { backgroundColor: h.color, borderColor: h.color } : undefined}
-                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md border text-white transition-colors ${
+                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md border transition-colors ${
                           done
-                            ? ""
-                            : isFuture
-                              ? "cursor-default border-line/50 bg-black/[0.015]"
-                              : "border-line hover:bg-black/[0.05]"
+                            ? "text-white"
+                            : missed
+                              ? "border-line bg-black/[0.05] text-faint"
+                              : isFuture
+                                ? "cursor-default border-line/50 bg-black/[0.015]"
+                                : "border-line hover:bg-black/[0.05]"
                         } ${isToday ? "ring-2 ring-accent ring-offset-1" : ""}`}
-                        aria-label={`Toggle ${h.name} day ${day}`}
+                        aria-label={`Mark ${h.name} day ${day}`}
+                        title="Tap: done → missed → clear"
                       >
                         {done && <CheckIcon size={13} />}
+                        {missed && <CloseIcon size={12} />}
                       </button>
                     );
                   })}

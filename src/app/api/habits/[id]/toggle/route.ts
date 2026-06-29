@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/account";
-import { toggleEntry, VALID_DATE } from "@/lib/habits";
+import { cycleEntry, VALID_DATE } from "@/lib/habits";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +17,7 @@ export async function POST(
   if (!body.date || !VALID_DATE.test(body.date)) {
     return NextResponse.json({ error: "Invalid date" }, { status: 400 });
   }
-  const result = await toggleEntry(user.id, id, body.date);
+  const result = await cycleEntry(user.id, id, body.date);
   if (!result) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(result);
 }

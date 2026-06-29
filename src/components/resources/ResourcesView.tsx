@@ -89,7 +89,7 @@ export default function ResourcesView({
         {/* Tabs */}
         <div className="mb-5 inline-flex rounded-xl border border-line bg-surface p-1">
           <TabButton active={tab === "habits"} onClick={() => setTab("habits")}>
-            🔥 Habit tracker
+            🌱 Habits
           </TabButton>
           <TabButton active={tab === "docs"} onClick={() => setTab("docs")}>
             📄 Documents
