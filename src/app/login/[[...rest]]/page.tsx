@@ -1,5 +1,5 @@
-import { SignIn } from "@clerk/nextjs";
 import Logo from "@/components/Logo";
+import SignInForm from "@/components/auth/SignInForm";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +24,7 @@ export default function LoginPage() {
         <p className="text-sm text-muted">Your voice-first trading journal.</p>
       </div>
       <div className="relative">
-        <SignIn signUpUrl="/signup" fallbackRedirectUrl="/today" />
+        <SignInForm />
       </div>
     </div>
   );
