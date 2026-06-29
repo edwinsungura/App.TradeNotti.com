@@ -3,7 +3,7 @@
 // the Clerk badge are additionally hidden via globals.css.
 export const clerkAppearance = {
   variables: {
-    colorPrimary: "#0e0f13", // ink — primary button
+    colorPrimary: "#5b4ef5", // indigo accent — buttons, links, focus
     colorText: "#0e0f13",
     colorTextSecondary: "#474e5c",
     colorBackground: "#ffffff",
@@ -16,14 +16,14 @@ export const clerkAppearance = {
   },
   elements: {
     rootBox: "w-full",
-    card: "shadow-xl shadow-black/[0.06] border border-line rounded-2xl bg-surface px-8 py-7",
+    card: "shadow-2xl shadow-accent/10 ring-1 ring-accent/10 border border-accent/10 rounded-2xl bg-surface px-8 py-7 backdrop-blur",
     headerTitle: "text-ink font-bold tracking-tight text-xl",
     headerSubtitle: "text-muted",
     formButtonPrimary:
-      "bg-ink text-white hover:opacity-90 transition-opacity normal-case font-semibold text-[14px] shadow-none",
+      "bg-gradient-to-r from-accent to-[#7b6bf9] text-white hover:opacity-90 transition-opacity normal-case font-semibold text-[14px] shadow-lg shadow-accent/25",
     formFieldLabel: "text-ink-soft font-medium",
     formFieldInput:
-      "border-line bg-surface text-ink focus:border-accent focus:ring-2 focus:ring-accent/15",
+      "border-line bg-surface text-ink focus:border-accent focus:ring-2 focus:ring-accent/20",
     footerActionText: "text-faint",
     footerActionLink: "text-accent hover:text-accent font-semibold",
     identityPreviewEditButton: "text-accent",

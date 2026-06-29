@@ -6,9 +6,17 @@ export const dynamic = "force-dynamic";
 export default function SignupPage() {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center gap-8 overflow-hidden bg-canvas px-4 py-10">
-      {/* soft brand glow behind the card */}
+      {/* indigo gradient wash + glows */}
       <div
-        className="pointer-events-none absolute -top-24 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full bg-accent/10 blur-3xl"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-accent-bg/70 via-canvas to-canvas"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute -top-28 left-1/2 h-80 w-[44rem] -translate-x-1/2 rounded-full bg-accent/25 blur-3xl"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute bottom-[-6rem] left-1/2 h-72 w-[40rem] -translate-x-1/2 rounded-full bg-accent/10 blur-3xl"
         aria-hidden
       />
       <div className="relative flex flex-col items-center gap-3">
