@@ -70,6 +70,7 @@ interface SlashItem {
   icon: React.ReactNode;
   run?: (e: Editor) => void;
   image?: boolean;
+  emoji?: boolean;
 }
 
 const HLabel = (n: number) => <span className="text-[13px] font-bold">H{n}</span>;
@@ -84,6 +85,7 @@ const SLASH_ITEMS: SlashItem[] = [
   { title: "To-do list", desc: "Checkbox tasks", keywords: "todo task checkbox check", icon: <ChecklistIcon size={16} />, run: (e) => e.chain().focus().toggleTaskList().run() },
   { title: "Quote", desc: "Capture a quote", keywords: "quote blockquote", icon: <QuoteIcon size={16} />, run: (e) => e.chain().focus().toggleBlockquote().run() },
   { title: "Code block", desc: "Code with syntax", keywords: "code block pre", icon: <CodeBlockIcon size={16} />, run: (e) => e.chain().focus().toggleCodeBlock().run() },
+  { title: "Emoji", desc: "Insert an emoji", keywords: "emoji emoticon icon smiley face react sticker", icon: <span className="text-[15px] leading-none">🙂</span>, emoji: true },
   { title: "Image", desc: "Upload or paste a picture", keywords: "image picture photo upload", icon: <ImageIcon size={16} />, image: true },
   { title: "Divider", desc: "Horizontal rule", keywords: "divider rule hr line separator", icon: <MinusIcon size={16} />, run: (e) => e.chain().focus().setHorizontalRule().run() },
 ];
@@ -166,6 +168,8 @@ const BlockEditor = forwardRef<
   const [slashIndex, setSlashIndex] = useState(0);
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [bubbleMenu, setBubbleMenu] = useState<BubbleMenuKind>(null);
+  const [emojiAt, setEmojiAt] = useState<{ top: number; left: number } | null>(null);
+  const emojiRef = useRef<HTMLDivElement>(null);
 
   const editorRef = useRef<Editor | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -290,13 +294,34 @@ const BlockEditor = forwardRef<
   const runSlash = useCallback(
     (item: SlashItem) => {
       if (!editor || !slash) return;
+      const coords = { top: slash.top, left: slash.left };
       editor.chain().focus().deleteRange(slash.range).run();
       setSlash(null);
       if (item.image) imageInputRef.current?.click();
+      else if (item.emoji) setEmojiAt(coords);
       else item.run?.(editor);
     },
     [editor, slash],
   );
+
+  // Close the emoji picker on outside click or Escape.
+  useEffect(() => {
+    if (!emojiAt) return;
+    const onDown = (e: MouseEvent) => {
+      if (emojiRef.current && !emojiRef.current.contains(e.target as Node)) {
+        setEmojiAt(null);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setEmojiAt(null);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [emojiAt]);
 
   useEffect(() => {
     if (!slash) return;
@@ -511,6 +536,31 @@ const BlockEditor = forwardRef<
               </button>
             ))
           )}
+        </div>
+      )}
+
+      {emojiAt && (
+        <div
+          ref={emojiRef}
+          className="fixed z-30 w-64 rounded-xl border border-line bg-surface p-2 shadow-xl shadow-black/10"
+          style={{ top: emojiAt.top, left: emojiAt.left }}
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          <div className="kicker mb-1.5 px-1">Emoji</div>
+          <div className="grid grid-cols-7 gap-0.5">
+            {EMOJIS.map((em) => (
+              <button
+                key={em}
+                onClick={() => {
+                  editor?.chain().focus().insertContent(em).run();
+                  setEmojiAt(null);
+                }}
+                className="flex h-8 items-center justify-center rounded-md text-[16px] hover:bg-black/[0.05]"
+              >
+                {em}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
