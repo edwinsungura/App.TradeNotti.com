@@ -19,6 +19,8 @@ import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import TextAlign from "@tiptap/extension-text-align";
 import Image from "@tiptap/extension-image";
+import { TextStyle, Color } from "@tiptap/extension-text-style";
+import Highlight from "@tiptap/extension-highlight";
 import { CharacterCount } from "@tiptap/extensions";
 import ImageLightbox from "../notebook/ImageLightbox";
 import {
@@ -93,6 +95,41 @@ interface SlashState {
   left: number;
 }
 
+// Text colors (Notion-style palette). null = default ink.
+const TEXT_COLORS: { label: string; value: string | null }[] = [
+  { label: "Default", value: null },
+  { label: "Gray", value: "#6d7480" },
+  { label: "Brown", value: "#8b5a2b" },
+  { label: "Red", value: "#e23b3b" },
+  { label: "Orange", value: "#d9650a" },
+  { label: "Yellow", value: "#b88600" },
+  { label: "Green", value: "#0d9d66" },
+  { label: "Blue", value: "#0ea5e9" },
+  { label: "Purple", value: "#5b4ef5" },
+  { label: "Pink", value: "#ec4899" },
+];
+
+// Highlight tints. null = remove highlight.
+const HIGHLIGHTS: { label: string; value: string | null }[] = [
+  { label: "None", value: null },
+  { label: "Yellow", value: "#fef3c7" },
+  { label: "Green", value: "#dcfce7" },
+  { label: "Blue", value: "#dbeafe" },
+  { label: "Purple", value: "#ede9fe" },
+  { label: "Pink", value: "#fce7f3" },
+  { label: "Red", value: "#fee2e2" },
+  { label: "Orange", value: "#ffedd5" },
+  { label: "Gray", value: "#e9ebef" },
+];
+
+const EMOJIS = [
+  "📈", "📉", "🎯", "🔥", "✅", "🚫", "🧠", "💡", "⚠️", "📝",
+  "📌", "💰", "⭐", "🚀", "🏆", "💪", "🟢", "🔴", "🔵", "🟡",
+  "➡️", "↗️", "↘️", "⏰", "📅", "❗", "💎", "☕",
+];
+
+type BubbleMenuKind = "text" | "highlight" | "emoji" | null;
+
 function BubbleBtn({
   active,
   onClick,
@@ -128,6 +165,7 @@ const BlockEditor = forwardRef<
   const [slash, setSlash] = useState<SlashState | null>(null);
   const [slashIndex, setSlashIndex] = useState(0);
   const [lightbox, setLightbox] = useState<string | null>(null);
+  const [bubbleMenu, setBubbleMenu] = useState<BubbleMenuKind>(null);
 
   const editorRef = useRef<Editor | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -171,6 +209,9 @@ const BlockEditor = forwardRef<
       TaskItem.configure({ nested: true }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Image.configure({ allowBase64: true }),
+      TextStyle,
+      Color,
+      Highlight.configure({ multicolor: true }),
       CharacterCount,
     ],
     content: initialContent ?? "",
@@ -220,7 +261,10 @@ const BlockEditor = forwardRef<
       onUpdateRef.current?.();
       detectSlash(editor);
     },
-    onSelectionUpdate: ({ editor }) => detectSlash(editor),
+    onSelectionUpdate: ({ editor }) => {
+      detectSlash(editor);
+      if (editor.state.selection.empty) setBubbleMenu(null);
+    },
     onTransaction: () => forceUpdate(),
   });
   editorRef.current = editor;
@@ -287,7 +331,7 @@ const BlockEditor = forwardRef<
       {editor && (
         <BubbleMenu
           editor={editor}
-          className="flex items-center gap-0.5 rounded-lg border border-line bg-surface p-1 shadow-lg shadow-black/10"
+          className="relative flex items-center gap-0.5 rounded-lg border border-line bg-surface p-1 shadow-lg shadow-black/10"
         >
           <BubbleBtn active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}>
             <span className="font-bold">B</span>
@@ -316,6 +360,111 @@ const BlockEditor = forwardRef<
           >
             <LinkIcon size={15} />
           </BubbleBtn>
+
+          <span className="mx-0.5 h-5 w-px bg-line" />
+
+          {/* Text color */}
+          <BubbleBtn
+            active={bubbleMenu === "text" || editor.isActive("textStyle")}
+            onClick={() => setBubbleMenu((m) => (m === "text" ? null : "text"))}
+          >
+            <span
+              className="font-semibold"
+              style={{ color: (editor.getAttributes("textStyle").color as string) || undefined }}
+            >
+              A
+            </span>
+          </BubbleBtn>
+          {/* Highlight */}
+          <BubbleBtn
+            active={bubbleMenu === "highlight" || editor.isActive("highlight")}
+            onClick={() => setBubbleMenu((m) => (m === "highlight" ? null : "highlight"))}
+          >
+            <span className="rounded-sm bg-[#fde68a] px-1 font-semibold text-ink">A</span>
+          </BubbleBtn>
+          {/* Emoji */}
+          <BubbleBtn
+            active={bubbleMenu === "emoji"}
+            onClick={() => setBubbleMenu((m) => (m === "emoji" ? null : "emoji"))}
+          >
+            <span className="text-[15px] leading-none">🙂</span>
+          </BubbleBtn>
+
+          {bubbleMenu && (
+            <div
+              className="absolute left-0 top-full z-10 mt-1.5 rounded-xl border border-line bg-surface p-2 shadow-xl shadow-black/10"
+              onMouseDown={(e) => e.preventDefault()}
+            >
+              {bubbleMenu === "text" && (
+                <div className="w-52">
+                  <div className="kicker mb-1.5 px-1">Text color</div>
+                  <div className="grid grid-cols-5 gap-1">
+                    {TEXT_COLORS.map((c) => (
+                      <button
+                        key={c.label}
+                        title={c.label}
+                        onClick={() => {
+                          if (c.value) editor.chain().focus().setColor(c.value).run();
+                          else editor.chain().focus().unsetColor().run();
+                          setBubbleMenu(null);
+                        }}
+                        className="flex h-8 items-center justify-center rounded-md border border-line text-[13px] font-semibold hover:bg-black/[0.04]"
+                        style={{ color: c.value ?? "var(--color-ink)" }}
+                      >
+                        A
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {bubbleMenu === "highlight" && (
+                <div className="w-52">
+                  <div className="kicker mb-1.5 px-1">Highlight</div>
+                  <div className="grid grid-cols-5 gap-1">
+                    {HIGHLIGHTS.map((c) => (
+                      <button
+                        key={c.label}
+                        title={c.label}
+                        onClick={() => {
+                          if (c.value)
+                            editor.chain().focus().setHighlight({ color: c.value }).run();
+                          else editor.chain().focus().unsetHighlight().run();
+                          setBubbleMenu(null);
+                        }}
+                        className="flex h-8 items-center justify-center rounded-md border border-line text-[12px] text-ink-soft hover:ring-2 hover:ring-accent/30"
+                        style={{ backgroundColor: c.value ?? "transparent" }}
+                      >
+                        {c.value ? "A" : "—"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {bubbleMenu === "emoji" && (
+                <div className="w-60">
+                  <div className="kicker mb-1.5 px-1">Emoji</div>
+                  <div className="grid grid-cols-7 gap-0.5">
+                    {EMOJIS.map((em) => (
+                      <button
+                        key={em}
+                        onClick={() => {
+                          // Insert at the selection end so we never replace text.
+                          const at = editor.state.selection.to;
+                          editor.chain().focus().insertContentAt(at, em).run();
+                          setBubbleMenu(null);
+                        }}
+                        className="flex h-8 items-center justify-center rounded-md text-[16px] hover:bg-black/[0.05]"
+                      >
+                        {em}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </BubbleMenu>
       )}
 

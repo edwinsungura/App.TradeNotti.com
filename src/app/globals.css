@@ -202,6 +202,16 @@ h1 {
   font-weight: 700;
 }
 
+/* Highlighter marks — rounded, padded so colored text reads like a real
+   highlight (and survives wrapping across lines). */
+.tiptap-content mark {
+  border-radius: 4px;
+  padding: 0.05em 0.2em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  color: inherit;
+}
+
 /* Placeholder text on empty nodes */
 .tiptap-content p.is-editor-empty:first-child::before,
 .tiptap-content .is-empty::before {
