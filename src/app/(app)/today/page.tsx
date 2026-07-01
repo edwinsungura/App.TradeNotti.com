@@ -61,10 +61,31 @@ export default async function TodayPage({
 
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
-          <div className="kicker mb-2">{formatLongDate()}</div>
-          <h1 className="mb-8 text-2xl font-bold tracking-tight sm:text-3xl">
-            {greeting()}, {displayName}.
-          </h1>
+          <div className="relative mb-8 overflow-hidden">
+            {/* Signature rising-line motif, faint, behind the greeting. */}
+            <svg
+              aria-hidden
+              className="pointer-events-none absolute -top-3 right-0 h-24 w-[62%] opacity-[0.08]"
+              viewBox="0 0 400 60"
+              fill="none"
+              preserveAspectRatio="none"
+            >
+              <polyline
+                points="0,50 60,38 120,44 180,20 240,30 300,17 360,25 400,5"
+                stroke="var(--color-accent)"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <circle cx="400" cy="5" r="5" fill="var(--color-accent)" />
+            </svg>
+            <div className="kicker relative mb-2">{formatLongDate()}</div>
+            <h1 className="relative text-2xl font-bold tracking-tight sm:text-3xl">
+              <span className="text-gradient">
+                {greeting()}, {displayName}.
+              </span>
+            </h1>
+          </div>
 
           <div className="flex flex-col gap-5">
             <DailyInsightCard category={insight.category} text={insight.text} />
