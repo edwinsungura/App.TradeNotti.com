@@ -68,7 +68,7 @@ function Slot({
 
       <button
         onClick={() => inputRef.current?.click()}
-        className="group relative flex aspect-[16/10] items-center justify-center overflow-hidden rounded-xl border border-dashed border-line bg-white/[0.015] transition-colors hover:border-accent/50"
+        className="group relative flex aspect-[16/10] items-center justify-center overflow-hidden rounded-xl border border-dashed border-line bg-black/[0.015] transition-colors hover:border-accent/50"
       >
         {src ? (
           // eslint-disable-next-line @next/next/no-img-element

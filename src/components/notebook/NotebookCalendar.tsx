@@ -117,13 +117,13 @@ export default function NotebookCalendar({
               onClick={() => shift(-1)}
               disabled={loading}
               aria-label="Previous month"
-              className="flex h-8 w-8 rotate-90 items-center justify-center rounded-lg border border-line text-muted hover:bg-white/[0.04]"
+              className="flex h-8 w-8 rotate-90 items-center justify-center rounded-lg border border-line text-muted hover:bg-black/[0.04]"
             >
               <ChevronIcon size={16} />
             </button>
             <button
               onClick={goToday}
-              className="rounded-lg border border-line px-3 py-1.5 text-[13px] font-medium text-ink-soft hover:bg-white/[0.04]"
+              className="rounded-lg border border-line px-3 py-1.5 text-[13px] font-medium text-ink-soft hover:bg-black/[0.04]"
             >
               Today
             </button>
@@ -131,7 +131,7 @@ export default function NotebookCalendar({
               onClick={() => shift(1)}
               disabled={loading}
               aria-label="Next month"
-              className="flex h-8 w-8 -rotate-90 items-center justify-center rounded-lg border border-line text-muted hover:bg-white/[0.04]"
+              className="flex h-8 w-8 -rotate-90 items-center justify-center rounded-lg border border-line text-muted hover:bg-black/[0.04]"
             >
               <ChevronIcon size={16} />
             </button>
@@ -166,7 +166,7 @@ export default function NotebookCalendar({
                       key={key}
                       onClick={() => router.push(`/notebook/${key}`)}
                       className={`group relative flex min-h-[112px] flex-col border-b border-r border-line/70 p-2 text-left transition-colors last:border-r-0 hover:bg-accent-bg/40 ${
-                        inMonth ? "" : "bg-white/[0.015]"
+                        inMonth ? "" : "bg-black/[0.015]"
                       }`}
                     >
                       <div className="flex items-center justify-between">

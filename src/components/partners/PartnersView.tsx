@@ -151,7 +151,7 @@ export default function PartnersView({
                       </span>
                       <button
                         onClick={() => respond(r.partnershipId, false)}
-                        className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-muted hover:bg-white/[0.04]"
+                        className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-muted hover:bg-black/[0.04]"
                       >
                         Decline
                       </button>
@@ -237,7 +237,7 @@ export default function PartnersView({
                     </span>
                   </div>
 
-                  <div className="border-t border-line/70 bg-white/[0.015] px-5 py-2.5 text-[12px] text-faint">
+                  <div className="border-t border-line/70 bg-black/[0.015] px-5 py-2.5 text-[12px] text-faint">
                     {p.stats.lastActive ? (
                       <span className="flex items-center gap-1.5">
                         <span className="h-1.5 w-1.5 rounded-full bg-profit" />
@@ -279,7 +279,7 @@ export default function PartnersView({
                       <button
                         onClick={() => remove(o.partnershipId)}
                         aria-label="Cancel invite"
-                        className="flex h-7 w-7 items-center justify-center rounded-md text-faint hover:bg-white/[0.05] hover:text-ink"
+                        className="flex h-7 w-7 items-center justify-center rounded-md text-faint hover:bg-black/[0.05] hover:text-ink"
                       >
                         <CloseIcon size={15} />
                       </button>

@@ -123,7 +123,7 @@ export default function ResourcesView({
                     key={d.id}
                     onClick={() => openDoc(d.id)}
                     className={`flex w-full items-start gap-3 rounded-xl px-2.5 py-2.5 text-left transition-colors ${
-                      selected === d.id ? "bg-accent-bg" : "hover:bg-white/[0.03]"
+                      selected === d.id ? "bg-accent-bg" : "hover:bg-black/[0.03]"
                     }`}
                   >
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-line text-ink-soft">

@@ -92,7 +92,7 @@ export default function DayView({
               <li key={n.id}>
                 <Link
                   href={`/notebook/${date}/${n.id}`}
-                  className="flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3.5 transition-colors hover:bg-white/[0.02]"
+                  className="flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3.5 transition-colors hover:bg-black/[0.02]"
                 >
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-bg text-accent">
                     <JournalIcon size={17} />

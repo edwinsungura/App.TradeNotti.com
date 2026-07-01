@@ -123,7 +123,7 @@ export default function NoteEditor({
             <div className="relative">
               <button
                 onClick={() => setMenuOpen((o) => !o)}
-                className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-[13px] font-medium text-ink-soft hover:bg-white/[0.04]"
+                className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-[13px] font-medium text-ink-soft hover:bg-black/[0.04]"
               >
                 <TemplateIcon size={15} /> Templates
                 <ChevronIcon size={14} />
@@ -138,7 +138,7 @@ export default function NoteEditor({
                       <div key={t.id} className="group flex items-center">
                         <button
                           onClick={() => applyTemplate(t)}
-                          className="flex-1 truncate rounded-md px-2 py-1.5 text-left text-[13px] text-ink-soft hover:bg-white/[0.04]"
+                          className="flex-1 truncate rounded-md px-2 py-1.5 text-left text-[13px] text-ink-soft hover:bg-black/[0.04]"
                         >
                           {t.name}
                         </button>

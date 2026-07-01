@@ -125,7 +125,7 @@ export default function NotesPanel({
         onBlur={() => value !== (notes ?? "") && save(value)}
         placeholder="Write what happened, or tap Record note to dictate and auto-transcribe…"
         rows={6}
-        className="w-full resize-y rounded-xl border border-line bg-white/[0.01] px-4 py-3 text-[14px] leading-relaxed text-ink-soft outline-none placeholder:text-faint focus:border-accent/40"
+        className="w-full resize-y rounded-xl border border-line bg-black/[0.01] px-4 py-3 text-[14px] leading-relaxed text-ink-soft outline-none placeholder:text-faint focus:border-accent/40"
       />
 
       <div className="mt-2 flex items-center gap-1.5 text-[12px] text-faint">

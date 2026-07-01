@@ -93,7 +93,7 @@ export default function AccountSwitcher({
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-3 rounded-xl border border-line bg-surface px-3.5 py-2 text-left transition-colors hover:bg-white/[0.02]"
+        className="flex items-center gap-3 rounded-xl border border-line bg-surface px-3.5 py-2 text-left transition-colors hover:bg-black/[0.02]"
       >
         <span className="h-2 w-2 rounded-full bg-profit" />
         <span className="leading-tight">
@@ -147,7 +147,7 @@ function Row({
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center gap-3 px-3.5 py-2 text-left text-sm hover:bg-white/[0.03]"
+      className="flex w-full items-center gap-3 px-3.5 py-2 text-left text-sm hover:bg-black/[0.03]"
     >
       <span
         className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${

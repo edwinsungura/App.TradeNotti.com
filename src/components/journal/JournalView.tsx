@@ -107,7 +107,7 @@ export default function JournalView({
         </div>
 
         <div className="mb-5 flex flex-wrap items-center gap-2">
-          <div className="inline-flex rounded-lg bg-white/[0.04] p-0.5">
+          <div className="inline-flex rounded-lg bg-black/[0.04] p-0.5">
             {TABS.map((t) => (
               <button
                 key={t.id}
@@ -217,7 +217,7 @@ export default function JournalView({
                     <tr
                       key={t.id}
                       onClick={() => router.push(`/journal/${t.id}`)}
-                      className="cursor-pointer border-b border-line/70 transition-colors last:border-0 hover:bg-white/[0.02] [&>td]:px-3 [&>td]:py-3.5"
+                      className="cursor-pointer border-b border-line/70 transition-colors last:border-0 hover:bg-black/[0.02] [&>td]:px-3 [&>td]:py-3.5"
                     >
                       <td className="!pl-0">
                         <span className="flex items-center gap-2 font-medium">

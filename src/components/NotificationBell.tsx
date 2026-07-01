@@ -90,7 +90,7 @@ export default function NotificationBell({
       <button
         onClick={() => setOpen((o) => !o)}
         aria-label="Notifications"
-        className="relative flex h-9 w-9 items-center justify-center rounded-full text-muted hover:bg-white/[0.04]"
+        className="relative flex h-9 w-9 items-center justify-center rounded-full text-muted hover:bg-black/[0.04]"
       >
         <BellIcon size={18} />
         {unread > 0 && (
@@ -121,7 +121,7 @@ export default function NotificationBell({
                 <button
                   key={n.id}
                   onClick={() => openItem(n)}
-                  className={`flex w-full items-start gap-3 border-b border-line/60 px-4 py-3 text-left last:border-0 hover:bg-white/[0.02] ${
+                  className={`flex w-full items-start gap-3 border-b border-line/60 px-4 py-3 text-left last:border-0 hover:bg-black/[0.02] ${
                     n.read ? "" : "bg-accent-bg/30"
                   }`}
                 >

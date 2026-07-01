@@ -1,39 +1,39 @@
 @import "tailwindcss";
 
 /* --------------------------------------------------------------------------
-   TradeNotti — premium dark theme. Near-black canvas, elevated slate cards,
-   an indigo→violet signature accent with soft glows. Built on semantic tokens
-   so the whole app follows the palette.
+   TradeNotti — elevated light theme. Clean white canvas with a soft indigo
+   aurora glow, an indigo→violet signature accent on the interactive surfaces,
+   and airy premium cards. Built on semantic tokens so the whole app follows.
    ------------------------------------------------------------------------- */
 @theme {
-  --color-ink: #f3f4f8; /* primary text (near-white) */
-  --color-ink-soft: #ccd0db; /* strong secondary */
-  --color-muted: #9298a7; /* muted labels */
-  --color-faint: #6b7180; /* faint / meta */
-  --color-line: #262a37; /* hairline borders + dividers */
-  --color-surface: #14161f; /* elevated cards / panels */
-  --color-canvas: #0a0b10; /* app background */
+  --color-ink: #0e0f13;
+  --color-ink-soft: #2b2c32;
+  --color-muted: #474e5c;
+  --color-faint: #6d7480;
+  --color-line: #e8e8ea;
+  --color-surface: #ffffff;
+  --color-canvas: #fbfbfd; /* barely-off-white so cards + glow read */
 
-  --color-profit: #34d399;
-  --color-profit-soft: rgba(52, 211, 153, 0.15);
-  --color-loss: #f87171;
-  --color-loss-soft: rgba(248, 113, 113, 0.15);
+  --color-profit: #0d9d66;
+  --color-profit-soft: #e3f5ec;
+  --color-loss: #e23b3b;
+  --color-loss-soft: #fde9e8;
 
-  --color-grade-high: #34d399;
-  --color-grade-high-bg: rgba(52, 211, 153, 0.15);
-  --color-grade-low: #fbbf24;
-  --color-grade-low-bg: rgba(251, 191, 36, 0.15);
+  --color-grade-high: #0f8a5f;
+  --color-grade-high-bg: #e3f5ec;
+  --color-grade-low: #9a6410;
+  --color-grade-low-bg: #fbeed6;
 
-  --color-accent: #6f61f5; /* indigo (brightened for dark contrast) */
+  --color-accent: #5b4ef5; /* brand indigo */
   --color-accent-2: #9d7bff; /* violet — gradient partner */
-  --color-accent-bg: rgba(111, 97, 245, 0.16); /* selected / active tint */
+  --color-accent-bg: #eae7fe; /* selected / active tint */
 
   --font-mono: "SF Mono", "JetBrains Mono", "Roboto Mono", ui-monospace,
     "Menlo", monospace;
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html,
@@ -44,12 +44,13 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Signature aurora glow behind the whole app for depth. */
+/* Signature soft indigo aurora glow — subtle on white, gives the app a premium
+   lift without darkening the background. */
 body {
   background-color: var(--color-canvas);
   background-image:
-    radial-gradient(55rem 34rem at 12% -8%, rgba(111, 97, 245, 0.12), transparent 60%),
-    radial-gradient(48rem 30rem at 108% 8%, rgba(157, 123, 255, 0.08), transparent 55%);
+    radial-gradient(52rem 32rem at 12% -6%, rgba(91, 78, 245, 0.07), transparent 60%),
+    radial-gradient(46rem 28rem at 106% 2%, rgba(157, 123, 255, 0.06), transparent 55%);
   background-attachment: fixed;
   min-height: 100vh;
 }
@@ -166,7 +167,7 @@ h1 {
 .tiptap-content code {
   font-family: var(--font-mono);
   font-size: 0.86em;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.05);
   padding: 0.12em 0.36em;
   border-radius: 4px;
 }

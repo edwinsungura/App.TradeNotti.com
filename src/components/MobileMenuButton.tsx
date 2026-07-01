@@ -8,7 +8,7 @@ import { MenuIcon, SidebarIcon } from "./icons";
 export default function MobileMenuButton() {
   const { setOpen, collapsed, setCollapsed } = useMobileNav();
   const btn =
-    "flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-white/[0.04]";
+    "flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-black/[0.04]";
   return (
     <>
       <button

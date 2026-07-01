@@ -240,7 +240,7 @@ export default function SettingsView({
                     readOnly
                     disabled
                     title="Email can't be changed"
-                    className="w-full cursor-not-allowed rounded-lg border border-line bg-white/[0.02] px-3 py-2.5 text-[14px] text-muted outline-none"
+                    className="w-full cursor-not-allowed rounded-lg border border-line bg-black/[0.02] px-3 py-2.5 text-[14px] text-muted outline-none"
                   />
                 </label>
               </div>
@@ -289,7 +289,7 @@ export default function SettingsView({
               >
                 <span
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[12px] font-semibold ${
-                    a.archived ? "bg-white/[0.05] text-faint" : "bg-accent text-white"
+                    a.archived ? "bg-black/[0.05] text-faint" : "bg-accent text-white"
                   }`}
                 >
                   {badge(a.broker)}
@@ -300,7 +300,7 @@ export default function SettingsView({
                       {a.type === "LIVE" ? "Live" : "Demo"} · {a.label}
                     </span>
                     {a.archived && (
-                      <span className="rounded bg-white/[0.05] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-faint">
+                      <span className="rounded bg-black/[0.05] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-faint">
                         Archived
                       </span>
                     )}
@@ -342,7 +342,7 @@ export default function SettingsView({
                 <div className="relative">
                   <button
                     onClick={() => setMenuOpen(menuOpen === a.id ? null : a.id)}
-                    className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-[13px] font-medium text-ink-soft hover:bg-white/[0.04]"
+                    className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-[13px] font-medium text-ink-soft hover:bg-black/[0.04]"
                   >
                     Manage <ChevronIcon size={14} />
                   </button>
@@ -355,14 +355,14 @@ export default function SettingsView({
                             setModal({ mode: "edit", account: a });
                             setMenuOpen(null);
                           }}
-                          className="block w-full rounded-md px-2.5 py-1.5 text-left text-[13px] text-ink-soft hover:bg-white/[0.04]"
+                          className="block w-full rounded-md px-2.5 py-1.5 text-left text-[13px] text-ink-soft hover:bg-black/[0.04]"
                         >
                           Edit details
                         </button>
                         {a.connected ? (
                           <button
                             onClick={() => disconnectBroker(a)}
-                            className="block w-full rounded-md px-2.5 py-1.5 text-left text-[13px] text-ink-soft hover:bg-white/[0.04]"
+                            className="block w-full rounded-md px-2.5 py-1.5 text-left text-[13px] text-ink-soft hover:bg-black/[0.04]"
                           >
                             Disconnect broker
                           </button>
@@ -372,14 +372,14 @@ export default function SettingsView({
                               setConnectState({ mode: "link", account: a });
                               setMenuOpen(null);
                             }}
-                            className="block w-full rounded-md px-2.5 py-1.5 text-left text-[13px] text-ink-soft hover:bg-white/[0.04]"
+                            className="block w-full rounded-md px-2.5 py-1.5 text-left text-[13px] text-ink-soft hover:bg-black/[0.04]"
                           >
                             Connect broker
                           </button>
                         )}
                         <button
                           onClick={() => archive(a)}
-                          className="block w-full rounded-md px-2.5 py-1.5 text-left text-[13px] text-ink-soft hover:bg-white/[0.04]"
+                          className="block w-full rounded-md px-2.5 py-1.5 text-left text-[13px] text-ink-soft hover:bg-black/[0.04]"
                         >
                           {a.archived ? "Unarchive" : "Archive"}
                         </button>

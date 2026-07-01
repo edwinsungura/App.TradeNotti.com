@@ -84,7 +84,7 @@ export default function ConnectBrokerModal({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-white/[0.04]"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-black/[0.04]"
           >
             <CloseIcon size={18} />
           </button>
@@ -110,7 +110,7 @@ export default function ConnectBrokerModal({
 
           <div>
             <span className="kicker mb-1 block">Platform</span>
-            <div className="inline-flex rounded-lg bg-white/[0.04] p-0.5">
+            <div className="inline-flex rounded-lg bg-black/[0.04] p-0.5">
               {(["mt5", "mt4"] as const).map((p) => (
                 <button
                   key={p}

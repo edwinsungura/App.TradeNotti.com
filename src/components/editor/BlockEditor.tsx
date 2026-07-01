@@ -147,7 +147,7 @@ function BubbleBtn({
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       className={`flex h-8 min-w-8 items-center justify-center rounded-md px-1.5 text-[13px] transition-colors ${
-        active ? "bg-accent-bg text-accent" : "text-ink-soft hover:bg-white/[0.06]"
+        active ? "bg-accent-bg text-accent" : "text-ink-soft hover:bg-black/[0.06]"
       }`}
     >
       {children}
@@ -433,7 +433,7 @@ const BlockEditor = forwardRef<
                           else editor.chain().focus().unsetColor().run();
                           setBubbleMenu(null);
                         }}
-                        className="flex h-8 items-center justify-center rounded-md border border-line text-[13px] font-semibold hover:bg-white/[0.04]"
+                        className="flex h-8 items-center justify-center rounded-md border border-line text-[13px] font-semibold hover:bg-black/[0.04]"
                         style={{ color: c.value ?? "var(--color-ink)" }}
                       >
                         A
@@ -480,7 +480,7 @@ const BlockEditor = forwardRef<
                           editor.chain().focus().insertContentAt(at, em).run();
                           setBubbleMenu(null);
                         }}
-                        className="flex h-8 items-center justify-center rounded-md text-[16px] hover:bg-white/[0.05]"
+                        className="flex h-8 items-center justify-center rounded-md text-[16px] hover:bg-black/[0.05]"
                       >
                         {em}
                       </button>
@@ -523,7 +523,7 @@ const BlockEditor = forwardRef<
                 onMouseEnter={() => setSlashIndex(i)}
                 onClick={() => runSlash(item)}
                 className={`flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left ${
-                  i === slashIndex ? "bg-accent-bg" : "hover:bg-white/[0.03]"
+                  i === slashIndex ? "bg-accent-bg" : "hover:bg-black/[0.03]"
                 }`}
               >
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-line text-ink-soft">
@@ -555,7 +555,7 @@ const BlockEditor = forwardRef<
                   editor?.chain().focus().insertContent(em).run();
                   setEmojiAt(null);
                 }}
-                className="flex h-8 items-center justify-center rounded-md text-[16px] hover:bg-white/[0.05]"
+                className="flex h-8 items-center justify-center rounded-md text-[16px] hover:bg-black/[0.05]"
               >
                 {em}
               </button>

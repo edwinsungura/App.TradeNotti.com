@@ -117,7 +117,7 @@ export default function TodaysTrades({
           <button
             onClick={syncNow}
             disabled={syncing}
-            className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-[13px] font-medium text-ink-soft transition-colors hover:bg-white/[0.04] disabled:opacity-60"
+            className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-[13px] font-medium text-ink-soft transition-colors hover:bg-black/[0.04] disabled:opacity-60"
           >
             <RefreshIcon size={14} /> {syncing ? "Syncing…" : "Sync now"}
           </button>
@@ -156,7 +156,7 @@ export default function TodaysTrades({
                 <tr
                   key={t.id}
                   onClick={() => router.push(`/journal/${t.id}`)}
-                  className="cursor-pointer border-b border-line/70 transition-colors last:border-0 hover:bg-white/[0.02] [&>td]:px-3 [&>td]:py-3.5"
+                  className="cursor-pointer border-b border-line/70 transition-colors last:border-0 hover:bg-black/[0.02] [&>td]:px-3 [&>td]:py-3.5"
                 >
                   <td className="!pl-0">
                     <span className="flex items-center gap-2 font-medium">

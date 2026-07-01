@@ -116,7 +116,7 @@ export default function HabitTracker({ initial }: { initial: MonthGrid }) {
         <div className="flex items-center gap-2">
           <button
             onClick={() => changeMonth(-1)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-muted hover:bg-white/[0.03]"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-muted hover:bg-black/[0.03]"
             aria-label="Previous month"
           >
             <span className="rotate-90">
@@ -128,7 +128,7 @@ export default function HabitTracker({ initial }: { initial: MonthGrid }) {
           </div>
           <button
             onClick={() => changeMonth(1)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-muted hover:bg-white/[0.03]"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-muted hover:bg-black/[0.03]"
             aria-label="Next month"
           >
             <span className="-rotate-90">
@@ -168,7 +168,7 @@ export default function HabitTracker({ initial }: { initial: MonthGrid }) {
             Done
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="inline-flex h-4 w-4 items-center justify-center rounded border border-line bg-white/[0.05] text-faint">
+            <span className="inline-flex h-4 w-4 items-center justify-center rounded border border-line bg-black/[0.05] text-faint">
               <CloseIcon size={10} />
             </span>
             Missed
@@ -206,7 +206,7 @@ export default function HabitTracker({ initial }: { initial: MonthGrid }) {
                 <div key={h.id} className="flex items-center gap-1">
                   <button
                     onClick={() => setEditing(h)}
-                    className="sticky left-0 z-10 flex w-44 shrink-0 items-center gap-2 rounded-lg bg-surface px-1.5 py-1 text-left hover:bg-white/[0.03]"
+                    className="sticky left-0 z-10 flex w-44 shrink-0 items-center gap-2 rounded-lg bg-surface px-1.5 py-1 text-left hover:bg-black/[0.03]"
                     title="Edit habit"
                   >
                     <span className="text-[15px] leading-none">{h.emoji}</span>
@@ -247,10 +247,10 @@ export default function HabitTracker({ initial }: { initial: MonthGrid }) {
                           done
                             ? "text-white"
                             : missed
-                              ? "border-line bg-white/[0.05] text-faint"
+                              ? "border-line bg-black/[0.05] text-faint"
                               : isFuture
-                                ? "cursor-default border-line/50 bg-white/[0.015]"
-                                : "border-line hover:bg-white/[0.05]"
+                                ? "cursor-default border-line/50 bg-black/[0.015]"
+                                : "border-line hover:bg-black/[0.05]"
                         } ${isToday ? "ring-2 ring-accent ring-offset-1" : ""}`}
                         aria-label={`Mark ${h.name} day ${day}`}
                         title="Tap: done → missed → clear"
@@ -410,7 +410,7 @@ function HabitModal({
               key={e}
               onClick={() => setEmoji(e)}
               className={`flex h-8 w-8 items-center justify-center rounded-lg border text-[15px] ${
-                emoji === e ? "border-accent bg-accent-bg" : "border-line hover:bg-white/[0.03]"
+                emoji === e ? "border-accent bg-accent-bg" : "border-line hover:bg-black/[0.03]"
               }`}
             >
               {e}

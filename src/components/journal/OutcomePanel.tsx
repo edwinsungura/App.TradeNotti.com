@@ -73,7 +73,7 @@ function EditableText({
         if (e.key === "Escape") setDraft(value ?? "");
       }}
       placeholder={placeholder}
-      className="w-36 rounded-md bg-transparent px-1 py-0.5 text-right text-[13.5px] font-medium text-ink outline-none placeholder:font-normal placeholder:text-faint hover:bg-white/[0.03] focus:bg-white/[0.03]"
+      className="w-36 rounded-md bg-transparent px-1 py-0.5 text-right text-[13.5px] font-medium text-ink outline-none placeholder:font-normal placeholder:text-faint hover:bg-black/[0.03] focus:bg-black/[0.03]"
     />
   );
 }
