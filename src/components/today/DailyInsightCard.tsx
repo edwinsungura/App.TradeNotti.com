@@ -10,10 +10,10 @@ export default function DailyInsightCard({
   text: string;
 }) {
   return (
-    <section className="card-accent overflow-hidden rounded-2xl border border-accent/30 bg-accent-bg/70 p-6">
+    <section className="rounded-2xl border border-accent/30 bg-accent-bg/70 p-6">
       <div className="kicker mb-3 text-accent/80">Daily insight · {category}</div>
       <div className="flex items-start gap-4">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-accent to-[#9d7bff] text-white shadow-lg shadow-accent/25">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-white">
           <TrendingUpIcon size={18} />
         </span>
         <p className="pt-1 text-[15px] leading-relaxed text-ink">{text}</p>

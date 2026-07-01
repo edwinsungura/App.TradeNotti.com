@@ -106,7 +106,7 @@ export default function TodaysTrades({
   };
 
   return (
-    <section className="card-accent overflow-hidden rounded-2xl border border-line bg-surface p-6">
+    <section className="rounded-2xl border border-line bg-surface p-6">
       <div className="mb-4 flex items-end justify-between">
         <div>
           <div className="kicker mb-1">Logged today</div>
