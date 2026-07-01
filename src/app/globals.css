@@ -1,42 +1,57 @@
 @import "tailwindcss";
 
+/* --------------------------------------------------------------------------
+   TradeNotti — premium dark theme. Near-black canvas, elevated slate cards,
+   an indigo→violet signature accent with soft glows. Built on semantic tokens
+   so the whole app follows the palette.
+   ------------------------------------------------------------------------- */
 @theme {
-  --color-ink: #0e0f13;
-  --color-ink-soft: #2b2c32;
-  --color-muted: #474e5c;
-  --color-faint: #6d7480;
-  --color-line: #e8e8ea;
-  --color-surface: #ffffff;
-  --color-canvas: #ffffff;
+  --color-ink: #f3f4f8; /* primary text (near-white) */
+  --color-ink-soft: #ccd0db; /* strong secondary */
+  --color-muted: #9298a7; /* muted labels */
+  --color-faint: #6b7180; /* faint / meta */
+  --color-line: #262a37; /* hairline borders + dividers */
+  --color-surface: #14161f; /* elevated cards / panels */
+  --color-canvas: #0a0b10; /* app background */
 
-  --color-profit: #0d9d66;
-  --color-profit-soft: #e3f5ec;
-  --color-loss: #e23b3b;
-  --color-loss-soft: #fde9e8;
+  --color-profit: #34d399;
+  --color-profit-soft: rgba(52, 211, 153, 0.15);
+  --color-loss: #f87171;
+  --color-loss-soft: rgba(248, 113, 113, 0.15);
 
-  --color-grade-high: #0f8a5f;
-  --color-grade-high-bg: #e3f5ec;
-  --color-grade-low: #9a6410;
-  --color-grade-low-bg: #fbeed6;
+  --color-grade-high: #34d399;
+  --color-grade-high-bg: rgba(52, 211, 153, 0.15);
+  --color-grade-low: #fbbf24;
+  --color-grade-low-bg: rgba(251, 191, 36, 0.15);
 
-  --color-accent: #5b4ef5;
-  --color-accent-bg: #eae7fe;
+  --color-accent: #6f61f5; /* indigo (brightened for dark contrast) */
+  --color-accent-2: #9d7bff; /* violet — gradient partner */
+  --color-accent-bg: rgba(111, 97, 245, 0.16); /* selected / active tint */
 
   --font-mono: "SF Mono", "JetBrains Mono", "Roboto Mono", ui-monospace,
     "Menlo", monospace;
 }
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 html,
 body {
-  background: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Signature aurora glow behind the whole app for depth. */
+body {
+  background-color: var(--color-canvas);
+  background-image:
+    radial-gradient(55rem 34rem at 12% -8%, rgba(111, 97, 245, 0.12), transparent 60%),
+    radial-gradient(48rem 30rem at 108% 8%, rgba(157, 123, 255, 0.08), transparent 55%);
+  background-attachment: fixed;
+  min-height: 100vh;
 }
 
 /* Feature headings use the Bricolage Grotesque display font. */
@@ -151,7 +166,7 @@ h1 {
 .tiptap-content code {
   font-family: var(--font-mono);
   font-size: 0.86em;
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.08);
   padding: 0.12em 0.36em;
   border-radius: 4px;
 }
@@ -209,7 +224,8 @@ h1 {
   padding: 0.05em 0.2em;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
-  color: inherit;
+  /* Highlight tints are light, so keep highlighted text dark for contrast. */
+  color: #14161f;
 }
 
 /* Placeholder text on empty nodes */

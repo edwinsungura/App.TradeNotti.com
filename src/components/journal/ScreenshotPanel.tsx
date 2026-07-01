@@ -52,7 +52,7 @@ function Slot({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
-        <span className="rounded bg-ink px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+        <span className="rounded bg-gradient-to-br from-accent to-[#9d7bff] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
           {label}
         </span>
         <span className="text-[12px] text-muted">{sub}</span>
@@ -68,7 +68,7 @@ function Slot({
 
       <button
         onClick={() => inputRef.current?.click()}
-        className="group relative flex aspect-[16/10] items-center justify-center overflow-hidden rounded-xl border border-dashed border-line bg-black/[0.015] transition-colors hover:border-accent/50"
+        className="group relative flex aspect-[16/10] items-center justify-center overflow-hidden rounded-xl border border-dashed border-line bg-white/[0.015] transition-colors hover:border-accent/50"
       >
         {src ? (
           // eslint-disable-next-line @next/next/no-img-element

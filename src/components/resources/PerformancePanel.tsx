@@ -59,14 +59,14 @@ export default function PerformancePanel({
         </div>
         <button
           onClick={() => downloadCsv(data)}
-          className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-[13px] font-medium text-ink-soft hover:bg-black/[0.04]"
+          className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-[13px] font-medium text-ink-soft hover:bg-white/[0.04]"
         >
           <UploadIcon size={14} /> Export
         </button>
       </div>
 
       <div className="mb-5 flex flex-wrap items-center gap-4">
-        <div className={`inline-flex rounded-lg bg-black/[0.04] p-0.5 ${loading ? "opacity-60" : ""}`}>
+        <div className={`inline-flex rounded-lg bg-white/[0.04] p-0.5 ${loading ? "opacity-60" : ""}`}>
           {PERIODS.map((p) => (
             <button
               key={p.id}

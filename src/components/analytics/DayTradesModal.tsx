@@ -90,7 +90,7 @@ function TradeBlock({ t }: { t: DayTrade }) {
           )}
 
           {t.notes && (
-            <p className="whitespace-pre-wrap rounded-lg bg-black/[0.02] px-3 py-2 text-[13px] leading-relaxed text-ink-soft">
+            <p className="whitespace-pre-wrap rounded-lg bg-white/[0.02] px-3 py-2 text-[13px] leading-relaxed text-ink-soft">
               {t.notes}
             </p>
           )}
@@ -170,7 +170,7 @@ export default function DayTradesModal({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-black/[0.04]"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-white/[0.04]"
           >
             <CloseIcon size={18} />
           </button>

@@ -93,7 +93,7 @@ export default function DocPanel({
         <div className="flex items-center gap-2">
           <button
             onClick={exportText}
-            className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-[13px] font-medium text-ink-soft hover:bg-black/[0.04]"
+            className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-[13px] font-medium text-ink-soft hover:bg-white/[0.04]"
           >
             <UploadIcon size={14} /> Export
           </button>

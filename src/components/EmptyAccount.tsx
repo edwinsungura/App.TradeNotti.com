@@ -25,7 +25,7 @@ export default function EmptyAccount({
         <p className="mb-7 text-sm leading-relaxed text-muted">{subtitle}</p>
         <Link
           href="/settings"
-          className="inline-flex items-center gap-2 rounded-lg bg-ink px-5 py-2.5 text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
+          className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-br from-accent to-[#9d7bff] px-5 py-2.5 text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
         >
           Add trading account
           <ArrowRightIcon size={15} />

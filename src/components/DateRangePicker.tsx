@@ -70,7 +70,7 @@ export default function DateRangePicker({
         <button
           onClick={() => shift(-1)}
           aria-label="Previous month"
-          className="flex h-7 w-7 rotate-90 items-center justify-center rounded-md text-muted hover:bg-black/[0.05]"
+          className="flex h-7 w-7 rotate-90 items-center justify-center rounded-md text-muted hover:bg-white/[0.05]"
         >
           <ChevronIcon size={15} />
         </button>
@@ -78,7 +78,7 @@ export default function DateRangePicker({
         <button
           onClick={() => shift(1)}
           aria-label="Next month"
-          className="flex h-7 w-7 -rotate-90 items-center justify-center rounded-md text-muted hover:bg-black/[0.05]"
+          className="flex h-7 w-7 -rotate-90 items-center justify-center rounded-md text-muted hover:bg-white/[0.05]"
         >
           <ChevronIcon size={15} />
         </button>
@@ -107,7 +107,7 @@ export default function DateRangePicker({
                   ? "bg-accent font-semibold text-white"
                   : inRange
                     ? "bg-accent-bg text-accent"
-                    : "text-ink-soft hover:bg-black/[0.05]"
+                    : "text-ink-soft hover:bg-white/[0.05]"
               }`}
             >
               {d}

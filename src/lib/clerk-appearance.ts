@@ -3,13 +3,14 @@
 // the Clerk badge are additionally hidden via globals.css.
 export const clerkAppearance = {
   variables: {
-    colorPrimary: "#5b4ef5", // indigo accent — buttons, links, focus
-    colorText: "#0e0f13",
-    colorTextSecondary: "#474e5c",
-    colorBackground: "#ffffff",
-    colorInputBackground: "#ffffff",
-    colorInputText: "#0e0f13",
-    colorDanger: "#e23b3b",
+    colorPrimary: "#6f61f5", // indigo accent — buttons, links, focus
+    colorText: "#f3f4f8",
+    colorTextSecondary: "#9298a7",
+    colorBackground: "#14161f",
+    colorInputBackground: "#1a1d29",
+    colorInputText: "#f3f4f8",
+    colorDanger: "#f87171",
+    colorNeutral: "#f3f4f8",
     borderRadius: "0.7rem",
     fontFamily: "var(--font-sans), system-ui, sans-serif",
     fontSize: "0.95rem",

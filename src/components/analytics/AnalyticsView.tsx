@@ -150,7 +150,7 @@ export default function AnalyticsView({
             <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Analytics</h1>
           </div>
           <div className={`flex items-center gap-2 ${loading ? "opacity-60" : ""}`}>
-            <div className="inline-flex rounded-lg bg-black/[0.04] p-0.5">
+            <div className="inline-flex rounded-lg bg-white/[0.04] p-0.5">
               {RANGES.map((r) => (
                 <button
                   key={r.id}
@@ -173,7 +173,7 @@ export default function AnalyticsView({
                 className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[13px] font-medium transition-colors ${
                   range === "custom"
                     ? "border-accent/40 bg-accent-bg text-accent"
-                    : "border-line text-ink-soft hover:bg-black/[0.04]"
+                    : "border-line text-ink-soft hover:bg-white/[0.04]"
                 }`}
               >
                 <CalendarIcon size={14} />
@@ -302,7 +302,7 @@ export default function AnalyticsView({
                   <button
                     type="button"
                     onClick={() => showSetup(s.name)}
-                    className="group flex w-full items-center justify-between gap-4 rounded-lg px-2 py-3 text-left transition-colors hover:bg-black/[0.025]"
+                    className="group flex w-full items-center justify-between gap-4 rounded-lg px-2 py-3 text-left transition-colors hover:bg-white/[0.025]"
                   >
                     <span className="flex min-w-0 items-center gap-1.5 truncate text-[14px] font-medium">
                       {s.name}

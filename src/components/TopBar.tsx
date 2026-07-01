@@ -39,7 +39,7 @@ export default async function TopBar({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={avatar} alt="Profile" className="h-full w-full object-cover" />
           ) : (
-            <span className="flex h-full w-full items-center justify-center rounded-full bg-ink text-sm font-medium text-white">
+            <span className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-accent to-[#9d7bff] text-sm font-medium text-white">
               {initial}
             </span>
           )}

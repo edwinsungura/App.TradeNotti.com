@@ -56,8 +56,8 @@ function NavLink({
       onClick={onNavigate}
       className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
         active
-          ? "bg-ink text-white"
-          : "text-ink hover:bg-black/[0.04]"
+          ? "bg-gradient-to-br from-accent to-[#9d7bff] text-white"
+          : "text-ink hover:bg-white/[0.04]"
       }`}
     >
       <span className={active ? "text-white" : "text-ink"}>
@@ -142,7 +142,7 @@ export default function Sidebar() {
             onClick={() => setCollapsed(!collapsed)}
             aria-label={collapsed ? "Keep sidebar open" : "Hide sidebar"}
             title={collapsed ? "Keep sidebar open" : "Hide sidebar"}
-            className="-mr-1 hidden h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-black/[0.04] lg:flex"
+            className="-mr-1 hidden h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-white/[0.04] lg:flex"
           >
             <SidebarIcon size={18} />
           </button>
@@ -150,7 +150,7 @@ export default function Sidebar() {
           <button
             onClick={close}
             aria-label="Close menu"
-            className="-mr-1 flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-black/[0.04] lg:hidden"
+            className="-mr-1 flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-white/[0.04] lg:hidden"
           >
             <CloseIcon size={18} />
           </button>

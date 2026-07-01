@@ -48,7 +48,7 @@ export default function InlineSelect({
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[13.5px] font-medium outline-none transition-colors hover:bg-black/[0.04]"
+        className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[13.5px] font-medium outline-none transition-colors hover:bg-white/[0.04]"
       >
         {renderTrigger ? (
           renderTrigger(current)
@@ -95,7 +95,7 @@ function Option({
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] transition-colors hover:bg-black/[0.04]"
+      className="flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] transition-colors hover:bg-white/[0.04]"
     >
       <span className={muted ? "text-faint" : "text-ink"}>{label}</span>
       {active && (

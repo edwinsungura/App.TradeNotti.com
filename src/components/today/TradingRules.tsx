@@ -25,7 +25,7 @@ export default function TradingRules({ rules }: { rules: RuleView[] }) {
           {rules.map((rule) => (
             <div
               key={rule.id}
-              className="flex items-center gap-3 rounded-xl bg-black/[0.02] px-4 py-3"
+              className="flex items-center gap-3 rounded-xl bg-white/[0.02] px-4 py-3"
             >
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-profit-soft text-profit">
                 <CheckIcon size={13} />

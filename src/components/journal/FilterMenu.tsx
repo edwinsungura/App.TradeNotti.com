@@ -100,7 +100,7 @@ function Option({
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-left text-[13px] text-ink-soft hover:bg-black/[0.04]"
+      className="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-left text-[13px] text-ink-soft hover:bg-white/[0.04]"
     >
       {label}
       {active && <CheckIcon size={14} />}
@@ -149,7 +149,7 @@ export default function FilterMenu({
         className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-[13px] font-medium transition-colors ${
           active > 0
             ? "border-accent/40 bg-accent-bg text-accent"
-            : "border-line text-ink-soft hover:bg-black/[0.03]"
+            : "border-line text-ink-soft hover:bg-white/[0.03]"
         }`}
       >
         <FilterIcon size={15} />
@@ -171,7 +171,7 @@ export default function FilterMenu({
               <div key={id}>
                 <button
                   onClick={() => setSection(expanded ? null : id)}
-                  className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-[13px] text-ink-soft hover:bg-black/[0.04]"
+                  className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-[13px] text-ink-soft hover:bg-white/[0.04]"
                 >
                   <span className="text-faint">
                     <Icon size={15} />
@@ -344,7 +344,7 @@ export default function FilterMenu({
                     {id === "rmultiple" && (
                       <div className="px-1.5 py-1">
                         {/* More-than / less-than toggle */}
-                        <div className="mb-2 inline-flex rounded-md bg-black/[0.04] p-0.5 text-[12px] font-medium">
+                        <div className="mb-2 inline-flex rounded-md bg-white/[0.04] p-0.5 text-[12px] font-medium">
                           {(
                             [
                               ["gte", "More than ≥"],
@@ -392,7 +392,7 @@ export default function FilterMenu({
                                 className={`rounded-md py-1.5 text-[12px] font-medium transition-colors ${
                                   active
                                     ? "bg-accent text-white"
-                                    : "bg-black/[0.03] text-ink-soft hover:bg-black/[0.06]"
+                                    : "bg-white/[0.03] text-ink-soft hover:bg-white/[0.06]"
                                 }`}
                               >
                                 {v}R

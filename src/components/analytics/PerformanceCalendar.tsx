@@ -102,7 +102,7 @@ export default function PerformanceCalendar({
             onClick={() => go(-1)}
             disabled={loading}
             aria-label="Previous month"
-            className="flex h-8 w-8 rotate-90 items-center justify-center rounded-lg text-muted hover:bg-black/[0.04]"
+            className="flex h-8 w-8 rotate-90 items-center justify-center rounded-lg text-muted hover:bg-white/[0.04]"
           >
             <ChevronIcon size={16} />
           </button>
@@ -110,7 +110,7 @@ export default function PerformanceCalendar({
             onClick={() => go(1)}
             disabled={loading}
             aria-label="Next month"
-            className="flex h-8 w-8 -rotate-90 items-center justify-center rounded-lg text-muted hover:bg-black/[0.04]"
+            className="flex h-8 w-8 -rotate-90 items-center justify-center rounded-lg text-muted hover:bg-white/[0.04]"
           >
             <ChevronIcon size={16} />
           </button>
